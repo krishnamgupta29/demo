@@ -1,0 +1,65 @@
+{
+  "_notice": "DENTRACE Clinical Anomaly & Tooth Mapping Specification. Strictly distinguishes true instance segmentation masks from bounding-box detection fallbacks.",
+  "target_pathologies": [
+    {
+      "id": 0,
+      "canonical_name": "caries",
+      "display_name": "Dental Caries",
+      "color_hex": "#D55E00",
+      "annotation_modality": "instance_segmentation",
+      "mask_fallback_allowed": true,
+      "clinical_notes": "Enamel/dentin demineralization. In OPGs, proximal and deep dentin caries are distinguishable; early occlusal lesions frequently require bitewing confirmation."
+    },
+    {
+      "id": 1,
+      "canonical_name": "periapical lesion",
+      "display_name": "Periapical Radiolucency",
+      "color_hex": "#CC79A7",
+      "annotation_modality": "instance_segmentation",
+      "mask_fallback_allowed": true,
+      "clinical_notes": "Circumscribed apical bone resorption associated with necrotic pulp or chronic apical periodontitis. Mandates periapical radiograph confirmation."
+    },
+    {
+      "id": 2,
+      "canonical_name": "bone loss",
+      "display_name": "Alveolar Bone Loss",
+      "color_hex": "#0072B2",
+      "annotation_modality": "bounding_box_or_polyline",
+      "mask_fallback_allowed": true,
+      "clinical_notes": "Horizontal or vertical reduction in alveolar bone crest height relative to cementoenamel junction (CEJ). Often annotated as polyline/box; must not be falsified as closed organ mask."
+    },
+    {
+      "id": 3,
+      "canonical_name": "impacted tooth",
+      "display_name": "Impacted Tooth",
+      "color_hex": "#E69F00",
+      "annotation_modality": "detection_bounding_box",
+      "mask_fallback_allowed": true,
+      "clinical_notes": "Tooth prevented from physiological eruption into functional occlusion. Bounding box or full tooth contour."
+    },
+    {
+      "id": 4,
+      "canonical_name": "root canal treatment",
+      "display_name": "Root Canal Filling / Evaluation",
+      "color_hex": "#009E73",
+      "annotation_modality": "instance_segmentation",
+      "mask_fallback_allowed": true,
+      "clinical_notes": "Radiopaque endodontic obturation material. Evaluated for obturation length, taper, and concomitant apical pathology."
+    },
+    {
+      "id": 5,
+      "canonical_name": "suspected endodontic failure",
+      "display_name": "Suspected Endodontic Failure",
+      "color_hex": "#B5573B",
+      "annotation_modality": "composite_rule_derived",
+      "mask_fallback_allowed": true,
+      "clinical_notes": "Compound clinical rule condition: Coexistence of root canal obturation and active periapical radiolucency on the same tooth. Requires clinician review and intraoral periapical film."
+    }
+  ],
+  "fdi_quadrants": {
+    "1": "Maxillary Right (Patient Right, Viewer Left)",
+    "2": "Maxillary Left (Patient Left, Viewer Right)",
+    "3": "Mandibular Left (Patient Left, Viewer Right)",
+    "4": "Mandibular Right (Patient Right, Viewer Left)"
+  }
+}

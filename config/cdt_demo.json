@@ -1,0 +1,99 @@
+{
+  "_compliance_notice": "DEMO ONLY. Verified academic illustrative subset. The Current Dental Terminology (CDT) code set is copyrighted by the American Dental Association (ADA). All procedure descriptions must be cross-referenced with the current official ADA CDT publication prior to insurance claim submission.",
+  "categories": {
+    "caries": {
+      "suggested_category": "Restorative",
+      "default_urgency": "soon",
+      "demo_codes": [
+        {
+          "code": "D2391",
+          "description": "Resin-based composite - one surface, posterior (DEMO ONLY)"
+        },
+        {
+          "code": "D2330",
+          "description": "Resin-based composite - one surface, anterior (DEMO ONLY)"
+        },
+        {
+          "code": "D2140",
+          "description": "Amalgam - one surface, primary or permanent (DEMO ONLY)"
+        }
+      ]
+    },
+    "periapical lesion": {
+      "suggested_category": "Endodontics",
+      "default_urgency": "urgent",
+      "hint": "Requires supplementary intraoral periapical radiograph for apical resolution.",
+      "demo_codes": [
+        {
+          "code": "D0220",
+          "description": "Intraoral - periapical first radiographic image (DEMO ONLY)"
+        },
+        {
+          "code": "D3330",
+          "description": "Endodontic therapy, molar tooth (excluding final restoration) (DEMO ONLY)"
+        },
+        {
+          "code": "D3310",
+          "description": "Endodontic therapy, anterior tooth (DEMO ONLY)"
+        }
+      ]
+    },
+    "bone loss": {
+      "suggested_category": "Periodontics",
+      "default_urgency": "soon",
+      "demo_codes": [
+        {
+          "code": "D4341",
+          "description": "Periodontal scaling and root planing - four or more teeth per quadrant (DEMO ONLY)"
+        },
+        {
+          "code": "D4910",
+          "description": "Periodontal maintenance (DEMO ONLY)"
+        }
+      ]
+    },
+    "impacted tooth": {
+      "suggested_category": "Oral & Maxillofacial Surgery",
+      "default_urgency": "routine",
+      "demo_codes": [
+        {
+          "code": "D7230",
+          "description": "Removal of impacted tooth - partially bony (DEMO ONLY)"
+        },
+        {
+          "code": "D7240",
+          "description": "Removal of impacted tooth - completely bony (DEMO ONLY)"
+        }
+      ]
+    },
+    "root canal treatment": {
+      "suggested_category": "Endodontics / Evaluation",
+      "default_urgency": "routine",
+      "demo_codes": [
+        {
+          "code": "D0120",
+          "description": "Periodic oral evaluation - established patient (DEMO ONLY)"
+        }
+      ]
+    },
+    "suspected endodontic failure": {
+      "suggested_category": "Endodontic Retreatment / Surgical Endodontics",
+      "default_urgency": "urgent",
+      "hint": "Requires immediate intraoral periapical radiograph. Prior obturation with active periapical radiolucency.",
+      "demo_codes": [
+        {
+          "code": "D0220",
+          "description": "Intraoral - periapical first radiographic image (DEMO ONLY)"
+        },
+        {
+          "code": "D3348",
+          "description": "Retreatment of previous root canal therapy - molar (DEMO ONLY)"
+        },
+        {
+          "code": "D3410",
+          "description": "Apicoectomy - anterior (DEMO ONLY)"
+        }
+      ]
+    }
+  }
+}

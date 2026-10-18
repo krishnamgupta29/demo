@@ -1,0 +1,48 @@
+{
+  "project": {
+    "name": "DENTRACE",
+    "long_name": "Local-First Dental Panoramic Radiograph Anomaly Detection and Insurance Claim Pre-Authorization Engine",
+    "version": "0.1.0-alpha",
+    "disclaimer": "Draft for dentist review. Not a diagnosis.",
+    "regulatory_status": "Academic decision-support prototype. Not a certified medical device."
+  },
+  "environment": {
+    "python_target": "3.11",
+    "device_preference": "cuda",
+    "fallback_device": "cpu",
+    "max_cpu_threads": 4,
+    "allow_external_egress": false
+  },
+  "storage": {
+    "datasets_root": "datasets",
+    "models_root": "models",
+    "reports_root": "reports/generated",
+    "experiments_root": "experiments",
+    "disk_budget_warning_threshold_gb": 3.0
+  },
+  "inference": {
+    "default_mode": "mock",
+    "supported_modes": ["mock", "onnx", "pytorch"],
+    "confidence_threshold": 0.35,
+    "iou_threshold": 0.45,
+    "overlap_min_ratio": 0.15,
+    "max_teeth_per_quadrant": 8,
+    "pathology_model_path": "models/pathology_detector.onnx",
+    "tooth_numbering_model_path": "models/tooth_numbering.onnx"
+  },
+  "llm": {
+    "provider": "ollama",
+    "endpoint": "http://127.0.0.1:11434",
+    "primary_model": "qwen2.5:3b-instruct",
+    "fallback_model": "phi3:mini",
+    "temperature": 0.1,
+    "top_p": 0.9,
+    "format_mode": "json",
+    "max_faithfulness_retries": 2,
+    "timeout_seconds": 45
+  },
+  "api": {
+    "host": "127.0.0.1",
+    "port": 8000
+  }
+}

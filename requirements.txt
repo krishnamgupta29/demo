@@ -1,0 +1,34 @@
+# ==============================================================================
+# DENTRACE Dependencies (Target: Python 3.11.9 on Windows x64)
+# ==============================================================================
+
+# Core Web & API Frameworks
+fastapi>=0.115.0,<0.116.0
+uvicorn[standard]>=0.30.0,<0.31.0
+pydantic>=2.9.0,<3.0.0
+python-multipart>=0.0.12
+
+# Clinical Frontend
+streamlit>=1.38.0,<1.40.0
+
+# Scientific, Computer Vision & PyTorch (CPU + CUDA 12.x/13.x compatible)
+numpy>=1.24.0,<2.0.0
+scipy>=1.11.0,<1.15.0
+opencv-python>=4.9.0,<4.11.0
+Pillow>=10.2.0,<11.0.0
+
+# Inference & Acceleration
+onnx>=1.16.0,<1.17.0
+onnxruntime>=1.18.0,<1.20.0
+
+# Local LLM Integration
+ollama>=0.3.0,<0.5.0
+httpx>=0.27.0,<0.29.0
+
+# Clinical Report Generation (PDF)
+reportlab>=4.2.0,<4.3.0
+
+# Testing & Quality Assurance
+pytest>=8.3.0,<9.0.0
+pytest-asyncio>=0.23.0,<0.25.0
+requests>=2.32.0,<2.33.0

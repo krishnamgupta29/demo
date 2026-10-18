@@ -1,0 +1,75 @@
+# Bytecode & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Sensitive Information & Credentials
+.env
+*.env
+*.pem
+*.key
+kaggle.json
+
+# Local Datasets & Raw Patient Images (STRICT CLINICAL PRIVACY RULE)
+# Note: D: drive has limited capacity (~4.5 GB); datasets must not be stored on D:
+datasets/*
+!datasets/.gitkeep
+!datasets/README.md
+data/*
+!data/.gitkeep
+!data/README.md
+*.dcm
+*.dicom
+*.tiff
+*.tif
+*.png
+*.jpg
+*.jpeg
+*.bmp
+*.zip
+*.tar.gz
+*.7z
+
+# Model Weights & Checkpoints (Do not commit binary weights)
+models/*
+!models/.gitkeep
+!models/README.md
+ml/checkpoints/*
+!ml/checkpoints/.gitkeep
+*.pt
+*.pth
+*.onnx
+*.bin
+*.engine
+*.safetensors
+
+# Experiments & Logs
+experiments/*
+!experiments/.gitkeep
+!experiments/README.md
+logs/
+*.log
+backend.log
+
+# Generated Reports & PDFs
+reports/generated/*
+!reports/generated/.gitkeep
+
+# IDE & OS Files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
