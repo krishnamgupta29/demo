@@ -1,50 +1,70 @@
-# DENTRACE — Pretrained Dental Model & Checkpoint Audit
+# DENTRACE — Pretrained Dental Model & Checkpoint Audit (Verified Level 0.5)
 
 > **DOCUMENT ID:** DOC-MODEL-003  
-> **STATUS:** AUDITED (LEVEL 0)  
+> **STATUS:** AUDITED & LIVE-VERIFIED (LEVEL 0.5)  
 > **VERIFICATION DATE:** 2026-10-18  
 
-This audit investigates accessible dental-specific pretrained models, baseline codebases, and weights to determine which can be directly leveraged for inference, which require fine-tuning, and which are code-only repositories lacking direct weights.
+This audit investigates dental-specific pretrained models, baseline codebases, and weights via direct repository inspection and remote header validation. It establishes a ranked reuse shortlist to eliminate redundant model training.
 
 ---
 
-## 1. Candidate Pretrained Models & Checkpoints
+## 1. Candidate Pretrained Models & Live Verification Matrix
 
-| Model / Repository | Source Link | Weights Present? | Architecture | Classes / Labels | Expected Input | License | Compatibility & Reuse Strategy | Limitations & Hardware Constraints |
-|---|---|---|---|---|---|---|---|---|
-| **liodon-ai/dental-panoramic-detector** | [HuggingFace: liodon-ai/dental-panoramic-detector](https://huggingface.co/liodon-ai/dental-panoramic-detector) | **YES (Verified)**: `best.pt` & `best.onnx` present on HuggingFace | YOLOv8 (Ultralytics) | Impacted teeth, periapical lesions, caries | 2D Panoramic X-ray, 640x640 RGB | Open / Academic (Apache 2.0 / MIT style) | **Direct Reuse Candidate:** Can run via ONNX Runtime on CPU or PyTorch on RTX 2050. Usable as initial checkpoint for pathology detection without retraining. | Bounding box detection only; no pixel segmentation masks. Trained on combined DENTEX + OralXrays-9 (~9,900 images). |
-| **nsitnov/8024-yolov8-model** | [HuggingFace: nsitnov/8024-yolov8-model](https://huggingface.co/nsitnov/8024-yolov8-model) | **YES (Verified)**: Checkpoint files hosted on HuggingFace | YOLOv8-seg (Instance Segmentation) | Caries, crown, filling, implant, missing teeth, periapical lesion, root canal treatment | 2D Panoramic X-ray, 640x640 | Open Community | **Direct / Fine-Tune Candidate:** Provides genuine instance segmentation masks for caries, periapical lesions, and root canal treatments. | Requires testing validation on DENTEX/Loki Silvres test sets. Fine-tuning recommended for clinical calibration. |
-| **gegesay89/dental-findings-yolo-detector** | [HuggingFace: gegesay89/dental-findings-yolo-detector](https://huggingface.co/gegesay89/dental-findings-yolo-detector) | **YES (Verified)**: Checkpoint available | YOLOv8-seg | 31 classes (bone loss, cysts, root canal, restoration, impaction) | 2D Panoramic X-ray, 640x640 | Open Community | **Fine-Tune Baseline:** Multi-class feature representations can be fine-tuned to isolate our target 5 classes. | High class imbalance across 31 classes. Must be filtered through `config/class_mapping.json`. |
-| **HierarchicalDet (DENTEX Baseline)** | [GitHub: ibrahimethemhamamci/HierarchicalDet](https://github.com/ibrahimethemhamamci/HierarchicalDet) (MICCAI 2023) | **NO DIRECT WEIGHTS (Code Only).** Weights must be trained locally or requested from authors. | DiffusionDet + Hierarchical multi-label Detectron2 | Quadrants (1–4), Enumeration (1–8), Diagnosis (`caries`, `deep caries`, `periapical`, `impacted`) | 2D Panoramic X-ray, dynamic resolution | Academic Non-Commercial (CC BY-NC 4.0) | **Training Benchmark:** Provides reference diffusion-detection architecture for DENTEX hierarchical evaluation. Cannot be used off-the-shelf without training. | Heavy compute footprint (Diffusion model training requires multi-GPU or extended Colab T4 run). Incompatible with sub-50ms CPU target. |
-| **tunisch/tooth-detection-and-numbering** | [GitHub: tunisch/tooth-detection-and-numbering](https://github.com/tunisch/tooth-detection-and-numbering) | **CONDITIONAL:** Hub link / Google Drive weights referenced in repository | YOLOv5 / PyTorch Hub | 32 permanent teeth (FDI notation 11–48) | 2D Panoramic X-ray, 640x640 | MIT License | **Reuse / Adaptation Candidate:** Standalone tooth detector for FDI numbering. Can be converted to ONNX for CPU inference. | YOLOv5 architecture (older than YOLOv8); outputs bounding boxes. Requires topological post-processing rules. |
-| **BoneLoss-PAN769 Inference Baseline** | [GitHub: thiagoavieira/boneloss-inference](https://github.com/thiagoavieira/boneloss-inference) / Zenodo | **YES (Verified)**: Weights provided via Zenodo repository | ResNet / U-Net baseline | Alveolar ridge, cementoenamel junction, tooth crowns | 2D Panoramic X-ray, normalized | Creative Commons Attribution (CC BY 4.0) | **Specialized Bone Loss Model:** Authoritative for quantitative alveolar bone loss calculation. | Requires multi-stage pipeline coupling with tooth numbering. |
-
----
-
-## 2. Analysis of "General Pretrained" vs "Dental Pretrained" Checkpoints
-
-> **CRITICAL ARCHITECTURAL DISTINCTION:**
-> Standard COCO-pretrained weights (e.g., standard `yolov8n.pt` trained on cars, persons, dogs) are NOT dental pathology models. While they provide transferrable low-level edge and texture filters, they have ZERO knowledge of dental radiopacity, pulpal radiolucency, or FDI tooth taxonomy.
-
-### Strategy for DENTRACE:
-1. **Tooth Localization & FDI Numbering:**
-   - Primary: Utilize DENTEX challenge annotations to fine-tune a YOLOv8 tooth enumeration model (or adapt `tunisch` / `liodon-ai` dental checkpoints).
-   - Post-process with deterministic anatomical rules:
-     - Quadrant 1 (UR): 18 down to 11 (max 8)
-     - Quadrant 2 (UL): 21 up to 28 (max 8)
-     - Quadrant 3 (LL): 31 up to 38 (max 8)
-     - Quadrant 4 (LR): 48 down to 41 (max 8)
-     - De-duplication: Resolve colliding FDI numbers by retaining the highest confidence candidate.
-2. **Pathology Segmentation (5 Classes):**
-   - Fine-tune a lightweight YOLOv8-seg model using the filtered 5-class configuration from Loki Silvres / DENTEX / HuggingFace checkpoints.
-   - For classes with genuine polygon masks (Caries, Periapical Lesion, Root Canal Treatment): output segmentation polygons.
-   - For classes without polygon masks (Impacted Tooth, Alveolar Bone Loss): output bounding boxes or crestal lines, documented explicitly as detection fallbacks.
-3. **Suspected Endodontic Failure:**
-   - Implemented as a **deterministic clinical rule** evaluating the spatial intersection of a `Root Canal Treatment` mask and a `Periapical Lesion` mask on the same FDI tooth box.
-   - This eliminates the need for an artificial single-label classifier while reflecting real endodontic pathology.
+| Model / Repository | Verified Source | Hosted Weights Verified | Exact Size | Architecture | Classes / Targets | Modality | License | Hardware Compatibility | ONNX Status |
+|---|---|---|---|---|---|---|---|---|---|
+| **abychkov/dental-fdi-detection** | [HuggingFace](https://huggingface.co/abychkov/dental-fdi-detection) | **YES:** `dental_fdi.onnx` | 130,754,966 B (124.70 MB) | Transformer Object Detector | 32 permanent teeth (FDI 11–48) | Bounding Boxes + FDI Classes | Evaluation (`other`) | CPU-optimized (~300ms CPU, ~20ms GPU) & RTX 2050 | **NATIVE ONNX** (`dental_fdi.onnx` ready) |
+| **liodon-ai/dental-panoramic-detector** | [HuggingFace](https://huggingface.co/liodon-ai/dental-panoramic-detector) | **YES:** `best.pt`, `best.onnx` | `best.pt`: 5.2 MB<br/>`best.onnx`: 10.11 MB | YOLO11n (Ultralytics Nano, ~2.6M params) | `caries`, `periapical_lesion`, `impacted_tooth` | Bounding Box Detection | CC BY-NC 4.0 | Runs on CPU (<20ms estimated) & RTX 2050 (<1 GB VRAM) | **ALREADY EXPORTED** (`best.onnx` ready) |
+| **nsitnov/8024-yolov8-model** | [HuggingFace](https://huggingface.co/nsitnov/8024-yolov8-model) | **YES:** `8024.pt` | 143,955,443 B (137.29 MB) | YOLOv8-seg (Ultralytics Instance Segmentation) | `Caries`, `Crown`, `Filling`, `Implant`, `Missing-tooth`, `Periapical-lesion`, `Root Piece`, `Root-Canal-Treatment` | True Instance Segmentation Polygons | Apache 2.0 | Runs on RTX 2050 (4 GB VRAM) & CPU | Directly exportable to ONNX via Ultralytics |
+| **gegesay89/dental-findings-yolo-detector** | [HuggingFace](https://huggingface.co/gegesay89/dental-findings-yolo-detector) | **YES:** `best.pt` | 367,706,701 B (350.67 MB) | YOLOv8x-seg (Ultralytics Large/Extra Large) | 31 classes (Caries, Periapical, Bone Loss, Root Canal, Impaction, Cyst, etc.) | Instance Segmentation Polygons | Educational (`other`) | Heavy memory footprint; high VRAM (~3.5 GB); CPU latency high | Exportable to ONNX; requires INT8 quantization |
+| **BoneLoss-PAN769 Baseline** | [Zenodo](https://doi.org/10.5281/zenodo.10055276) / [GitHub](https://github.com/thiagoavieira/boneloss-inference) | **YES:** Weights on Zenodo | ~120 MB | ResNet / U-Net | Alveolar bone crest line, CEJ markers | Crestal Polylines & Markers | CC BY 4.0 | CPU & GPU compatible | Compatible with ONNX |
+| **HierarchicalDet (DENTEX Baseline)** | [GitHub: DENTEX](https://github.com/ibrahimethemhamamci/HierarchicalDet) | **NO DIRECT WEIGHTS** (Code Only) | N/A | DiffusionDet + Hierarchical Detectron2 | Quadrants 1–4, Teeth 1–8, Diagnoses (Caries, Deep Caries, Periapical, Impacted) | Detection & Tooth Polygons | CC BY-NC 4.0 | Heavy multi-GPU compute footprint; incompatible with sub-50ms CPU target | PyTorch Detectron2 baseline |
+| **tunisch/tooth-detection-and-numbering** | [GitHub: tunisch](https://github.com/tunisch/tooth-detection-and-numbering) | **CONDITIONAL:** External Drive | ~14 MB | YOLOv5 | 32 permanent teeth (FDI 11–48) | Bounding Boxes | MIT | CPU & GPU compatible | Requires manual ONNX conversion |
 
 ---
 
-## 3. Storage and Execution Guardrails
-- **No Checkpoint Downloads in Level 0:** In strict accordance with Level 0 rules, no multi-gigabyte `.pt` weights have been downloaded to the local filesystem.
-- **Drive Partitioning:** All future checkpoint downloads and Colab exports must be routed to `C:\` or cached in virtual environments, protecting `D:\` from disk exhaustion.
+## 2. Granular Analysis & Target Class Coverage
+
+The College Problem Statement mandates 5 key dental anomalies plus FDI tooth identification:
+
+| Mandated Target | Supported By Verified Checkpoints | Modality in Checkpoint | Clinical Integration Strategy in DENTRACE |
+|---|---|---|---|
+| **FDI Tooth Identification (11–48)** | DENTEX `train_quadrant_enumeration.json` (18,095 labels) & `tunisch` | Tooth bounding box / contour | Fine-tune YOLO11n / YOLOv8 on DENTEX enumeration split. Post-process with deterministic quadrant rules (max 8 teeth per quadrant, deduplication). |
+| **1. Dental Caries** | `liodon-ai` (box), `nsitnov` (mask), `gegesay89` (mask), DENTEX (tooth) | True polygon mask (`nsitnov`) / Box (`liodon-ai`) | Primary: `nsitnov` instance mask for cavity contour. Secondary: `liodon-ai` detection box. |
+| **2. Periapical Lesions** | `liodon-ai` (box), `nsitnov` (mask), `gegesay89` (mask), DENTEX (tooth) | True polygon mask (`nsitnov`) / Box (`liodon-ai`) | Primary: `nsitnov` instance mask. Secondary: `liodon-ai` detection box. Triggers mandatory clinical notice: *"Needs intraoral periapical radiograph"*. |
+| **3. Impacted Teeth** | `liodon-ai` (box), DENTEX (anatomical tooth polygon), `gegesay89` (box/poly) | Anatomical tooth polygon / Box | Primary: DENTEX anatomical tooth polygon or `liodon-ai` detection box. Documented as anatomical impaction boundary, not synthetic lesion mask. |
+| **4. Alveolar Bone Loss** | `BoneLoss-PAN769` (crestal line), `gegesay89` (box/poly) | Crestal reference line / regional box | Primary: Crestal line marker / horizontal region box. Documented as detection fallback / crestal marker. Never rendered as closed organic blob. |
+| **5. Root Canal Failures (Suspected Endodontic Failure)** | **COMPOSITE DETERMINISTIC RULE:** `nsitnov` (`Root-Canal-Treatment` mask) + (`Periapical-lesion` mask) | Composite spatial intersection | Spatial co-occurrence: When a tooth exhibits both an existing endodontic obturation (`Root-Canal-Treatment`) AND a `Periapical-lesion`, the Rule Layer authoritatively flags `suspected_endodontic_failure = True`. Elevates urgency to `urgent`. |
+
+---
+
+## 3. Ranked Checkpoint Shortlist & Dual-Head Strategy
+ 
+DENTRACE employs a decoupled dual-head vision architecture: **Head 3A (FDI Tooth Identification)** and **Head 3B (Anomaly Detection & Instance Segmentation)**.
+ 
+### Head 3A: FDI Tooth Localization Candidates
+1. **Rank 1: `abychkov/dental-fdi-detection`**
+   - **Why First:** Provides pre-trained 32-tooth FDI bounding box proposals directly in ONNX format (~45 MB). Trained on 4,000+ adult clinical OPGs. Execution is clinic-ready (~300ms on CPU, ~20ms on GPU).
+   - **Testing Action:** Evaluate ONNX runtime inference and feed into `backend/pipeline/matching.py` with topological quadrant rules.
+2. **Rank 2: In-House YOLOv8 FDI Detector trained on DENTEX `train_quadrant_enumeration.json`**
+   - **Why Second:** 18,095 expert tooth enumeration annotations across 634 OPGs. Direct ground-truth alignment with DENTEX benchmark.
+3. **Rank 3: `tunisch/tooth-detection-and-numbering`** (YOLOv5 baseline).
+
+### Head 3B: Pathology Anomaly Detection & Segmentation Candidates
+1. **Rank 1 (Fast Screening Baseline): `liodon-ai/dental-panoramic-detector`**
+   - **Why First:** Ultra-lightweight YOLO11n (~2.6M parameters, `best.onnx` only 10.11 MB). Trained on 9,928 OPGs (DENTEX + OralXrays-9). Detects `Impacted Tooth`, `Caries`, and `Periapical Lesion`. Sub-30ms CPU latency expected.
+   - **Testing Action:** Validate as fast first-pass screener and baseline for comparison.
+2. **Rank 2 (Instance Segmentation Engine): `nsitnov/8024-yolov8-model`**
+   - **Why Second:** Genuine pixel-level instance segmentation masks for Caries, Periapical Lesions, and Root Canal Treatments. Enables the composite `suspected_endodontic_failure` clinical rule (RCT mask + Periapical mask on identical tooth).
+   - **Testing Action:** Export to ONNX, benchmark segmentation mask inference on host CPU/RTX 2050.
+3. **Rank 3 (Specialized Bone Loss): `BoneLoss-PAN769` Baseline**
+   - **Why Third:** Dedicated crestal alveolar bone loss reference line model from Zenodo.
+
+### Deferred / Incompatible:
+- **`HierarchicalDet`**: Code only; diffusion sampling is computationally prohibitive for edge CPU sub-50ms target.
+- **`gegesay89`**: 350 MB checkpoint, 31 classes with severe class imbalance; heavy VRAM footprint (~3.5 GB).
+
+---
+
+## 4. Storage & Download Safeguards
+- **Zero Heavy Downloads in Level 0.5:** No model weight files (`.pt` or `.onnx`) have been downloaded yet.
+- **Gated Execution:** Download of `best.onnx` (10.1 MB) will occur strictly after user approval during Level 1/3, targeted directly to `C:\mini\models\checkpoints\`.

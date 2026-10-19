@@ -60,5 +60,38 @@ d:/mini
 
 ---
 
-## 4. Phase Status: Level 0 (Preparation & Architecture)
-Level 0 establishes verified research foundations, dataset licensing audits, architecture specifications, and safety guidelines. Model training and large dataset downloads are intentionally gated until Level 1 approval.
+## 4. Phase Status: Level 1 (Core Foundation & Data Integration) — COMPLETE
+
+Level 1 established the core foundation and data integration layer:
+- **DENTEX Dataset Extraction:** Safely extracted 3,606 training files (13.71 GB) and 51 validation files (0.19 GB) to `C:\mini\datasets\dentex\raw/`. Forensic manifest created at `docs/dataset_inventory.json` with 100% polygon coverage (3,529 disease polygons, 18,095 tooth contour polygons).
+- **FastAPI Backend Core:** Production-ready REST endpoints under `/api/v1` for health, readiness, study intake, study detail, study list, web preview raster, study deletion, and model registry.
+- **Database & Persistence:** SQLite with WAL mode, SQLAlchemy 2.0 ORM models, Alembic migrations (`ec4d280c3836_initial_schema.py`), and runtime auto-migration manager.
+- **Security & DICOM:** Header validation, corruption rejection, path traversal defense, oversized payload rejection, DICOM transfer syntax validation, patient PHI sanitization.
+- **Model Registry:** 4 registered candidates (`abychkov`, `liodon-ai`, `nsitnov`, `BoneLoss-PAN769`) with truthful `MODEL_UNAVAILABLE` defaults.
+- **Automated Tests:** 33/33 automated tests passing in `tests/` (`docs/LEVEL_1_TEST_REPORT.md`).
+
+---
+
+## 5. PowerShell Quickstart Instructions
+
+All commands run on Windows 11 PowerShell from `C:\mini`:
+
+```powershell
+# 1. Environment Setup & Dependency Installation
+.\scripts\setup_env.ps1
+
+# 2. Execute Automated QA Test Suite (33 tests, 100% pass)
+.\scripts\run_tests.ps1
+
+# 3. Pretrained Model Availability & Benchmarking Suite
+& "C:\mini\.venv\Scripts\python.exe" C:\mini\scripts\benchmark_models.py
+
+# 4. Launch FastAPI Development Backend Server (127.0.0.1:8000)
+.\scripts\start_backend.ps1
+```
+
+Backend API Documentation is available locally at:
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- Health Check: `http://127.0.0.1:8000/api/v1/health`
+- Model Registry: `http://127.0.0.1:8000/api/v1/models`
+

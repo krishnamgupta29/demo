@@ -1,0 +1,271 @@
+{
+  "timestamp": "2026-10-19T07:54:27Z",
+  "extraction_manifests": {
+    "validation": {
+      "archive": "C:\\mini\\validation_data.zip",
+      "destination": "C:\\mini\\datasets\\dentex\\raw\\validation",
+      "total_members": 55,
+      "extracted_files": 51,
+      "skipped_dirs": 4,
+      "extracted_bytes": 201044945,
+      "elapsed_seconds": 0.05
+    },
+    "training": {
+      "archive": "C:\\mini\\training_data.zip",
+      "destination": "C:\\mini\\datasets\\dentex\\raw\\training",
+      "total_members": 3615,
+      "extracted_files": 3606,
+      "skipped_dirs": 9,
+      "extracted_bytes": 14725611903,
+      "elapsed_seconds": 80.0
+    }
+  },
+  "annotation_analysis": {
+    "quadrant": {
+      "file": "C:\\mini\\datasets\\dentex\\raw\\training\\training_data\\quadrant\\train_quadrant.json",
+      "image_count": 693,
+      "annotation_count": 2772,
+      "orphan_annotations": 0,
+      "has_bboxes": 2772,
+      "has_segmentation_polygons": 2772,
+      "degenerate_polygons": 0,
+      "categories_found": {
+        "categories": [
+          {
+            "id": 0,
+            "name": "2",
+            "supercategory": "2"
+          },
+          {
+            "id": 1,
+            "name": "1",
+            "supercategory": "1"
+          },
+          {
+            "id": 2,
+            "name": "3",
+            "supercategory": "3"
+          },
+          {
+            "id": 3,
+            "name": "4",
+            "supercategory": "4"
+          }
+        ]
+      },
+      "class_distribution": {
+        "cat_0": 693,
+        "cat_1": 693,
+        "cat_2": 693,
+        "cat_3": 693
+      },
+      "vertex_stats": {
+        "min_vertices": 4,
+        "max_vertices": 18,
+        "avg_vertices": 6.6
+      },
+      "coordinate_system": "Absolute Pixel Coordinates [x, y, w, h] and [[x1, y1, x2, y2, ...]]"
+    },
+    "quadrant_enumeration": {
+      "file": "C:\\mini\\datasets\\dentex\\raw\\training\\training_data\\quadrant_enumeration\\train_quadrant_enumeration.json",
+      "image_count": 634,
+      "annotation_count": 18095,
+      "orphan_annotations": 0,
+      "has_bboxes": 18095,
+      "has_segmentation_polygons": 18095,
+      "degenerate_polygons": 0,
+      "categories_found": {
+        "categories_1": [
+          {
+            "id": 0,
+            "name": 1,
+            "supercategory": 1
+          },
+          {
+            "id": 1,
+            "name": 2,
+            "supercategory": 2
+          },
+          {
+            "id": 2,
+            "name": 3,
+            "supercategory": 3
+          },
+          {
+            "id": 3,
+            "name": 4,
+            "supercategory": 4
+          }
+        ],
+        "categories_2": [
+          {
+            "id": 0,
+            "name": "1",
+            "supercategory": "1"
+          },
+          {
+            "id": 1,
+            "name": "2",
+            "supercategory": "2"
+          },
+          {
+            "id": 2,
+            "name": "3",
+            "supercategory": "3"
+          },
+          {
+            "id": 3,
+            "name": "4",
+            "supercategory": "4"
+          },
+          {
+            "id": 4,
+            "name": "5",
+            "supercategory": "5"
+          },
+          {
+            "id": 5,
+            "name": "6",
+            "supercategory": "6"
+          },
+          {
+            "id": 6,
+            "name": "7",
+            "supercategory": "7"
+          },
+          {
+            "id": 7,
+            "name": "8",
+            "supercategory": "8"
+          }
+        ]
+      },
+      "class_distribution": {
+        "tooth_0": 2508,
+        "tooth_1": 2497,
+        "tooth_2": 2499,
+        "tooth_4": 2299,
+        "tooth_5": 2070,
+        "tooth_6": 2314,
+        "tooth_7": 1504,
+        "tooth_3": 2404
+      },
+      "vertex_stats": {
+        "min_vertices": 3,
+        "max_vertices": 63,
+        "avg_vertices": 11.6
+      },
+      "coordinate_system": "Absolute Pixel Coordinates [x, y, w, h] and [[x1, y1, x2, y2, ...]]"
+    },
+    "quadrant_enumeration_disease": {
+      "file": "C:\\mini\\datasets\\dentex\\raw\\training\\training_data\\quadrant-enumeration-disease\\train_quadrant_enumeration_disease.json",
+      "image_count": 705,
+      "annotation_count": 3529,
+      "orphan_annotations": 0,
+      "has_bboxes": 3529,
+      "has_segmentation_polygons": 3529,
+      "degenerate_polygons": 0,
+      "categories_found": {
+        "categories_1": [
+          {
+            "id": 0,
+            "name": "1",
+            "supercategory": "1"
+          },
+          {
+            "id": 1,
+            "name": "2",
+            "supercategory": "2"
+          },
+          {
+            "id": 2,
+            "name": "3",
+            "supercategory": "3"
+          },
+          {
+            "id": 3,
+            "name": "4",
+            "supercategory": "4"
+          }
+        ],
+        "categories_2": [
+          {
+            "id": 0,
+            "name": "1",
+            "supercategory": "1"
+          },
+          {
+            "id": 1,
+            "name": "2",
+            "supercategory": "2"
+          },
+          {
+            "id": 2,
+            "name": "3",
+            "supercategory": "3"
+          },
+          {
+            "id": 3,
+            "name": "4",
+            "supercategory": "4"
+          },
+          {
+            "id": 4,
+            "name": "5",
+            "supercategory": "5"
+          },
+          {
+            "id": 5,
+            "name": "6",
+            "supercategory": "6"
+          },
+          {
+            "id": 6,
+            "name": "7",
+            "supercategory": "7"
+          },
+          {
+            "id": 7,
+            "name": "8",
+            "supercategory": "8"
+          }
+        ],
+        "categories_3": [
+          {
+            "id": 0,
+            "name": "Impacted",
+            "supercategory": "Impacted"
+          },
+          {
+            "id": 1,
+            "name": "Caries",
+            "supercategory": "Caries"
+          },
+          {
+            "id": 2,
+            "name": "Periapical Lesion",
+            "supercategory": "Periapical Lesion"
+          },
+          {
+            "id": 3,
+            "name": "Deep Caries",
+            "supercategory": "Deep Caries"
+          }
+        ]
+      },
+      "class_distribution": {
+        "disease_0": 604,
+        "disease_1": 2189,
+        "disease_2": 158,
+        "disease_3": 578
+      },
+      "vertex_stats": {
+        "min_vertices": 4,
+        "max_vertices": 34,
+        "avg_vertices": 12.0
+      },
+      "coordinate_system": "Absolute Pixel Coordinates [x, y, w, h] and [[x1, y1, x2, y2, ...]]"
+    }
+  },
+  "git_status": "EXCLUDED (datasets/* in .gitignore)"
+}

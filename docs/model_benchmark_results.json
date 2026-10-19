@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-10-19T08:01:16Z",
+  "results": [
+    {
+      "model_id": "abychkov-fdi-detection",
+      "model_name": "Dental FDI 32-Tooth Detector",
+      "version": "1.0.0",
+      "status": "MODEL_UNAVAILABLE",
+      "weight_path": "models/checkpoints/dental_fdi_detection.onnx",
+      "message": "Physical checkpoint 'models/checkpoints/dental_fdi_detection.onnx' not found on host. No synthetic or fabricated benchmark results are reported."
+    },
+    {
+      "model_id": "liodon-panoramic-screener",
+      "model_name": "Liodon Panoramic Anomaly Screener",
+      "version": "1.0.0",
+      "status": "MODEL_UNAVAILABLE",
+      "weight_path": "models/checkpoints/best.onnx",
+      "message": "Physical checkpoint 'models/checkpoints/best.onnx' not found on host. No synthetic or fabricated benchmark results are reported."
+    },
+    {
+      "model_id": "nsitnov-dental-segmentation",
+      "model_name": "Nsitnov Dental YOLOv8-Seg",
+      "version": "1.0.0",
+      "status": "MODEL_UNAVAILABLE",
+      "weight_path": "models/checkpoints/8024_seg.onnx",
+      "message": "Physical checkpoint 'models/checkpoints/8024_seg.onnx' not found on host. No synthetic or fabricated benchmark results are reported."
+    },
+    {
+      "model_id": "boneloss-pan769-baseline",
+      "model_name": "BoneLoss-PAN769 Alveolar Crest Line Detector",
+      "version": "1.0.0",
+      "status": "MODEL_UNAVAILABLE",
+      "weight_path": "models/checkpoints/boneloss_pan769.onnx",
+      "message": "Physical checkpoint 'models/checkpoints/boneloss_pan769.onnx' not found on host. No synthetic or fabricated benchmark results are reported."
+    }
+  ]
+}

@@ -58,3 +58,32 @@ This document logs critical architectural, technical, and clinical decisions mad
   3. Max 2 retries with targeted error prompts.
   4. If retries fail or Ollama is offline: automatically deploy the deterministic clinical fallback template (`backend/llm/fallback_template.py`).
 - **Rationale:** Guarantees 100% clinical fidelity without crashing the application.
+
+---
+
+## Decision Record 07: Resumable Safe Extraction Protocol with Zip-Slip Defense
+- **Context:** `training_data.zip` (10.18 GB compressed, 13.71 GB uncompressed) contains 3,615 members. Extracting from scratch on every run or failure is expensive and risks disk thrashing.
+- **Decision:** Implement resumable extraction in `scripts/safe_extract_dentex.py` with Zip-Slip validation, symlink rejection, and exact file-size matching.
+- **Rationale:** Skips already verified files instantly, protects against directory traversal attacks, and completed 13.71 GB extraction safely on C: drive in 80 seconds without data corruption.
+
+---
+
+## Decision Record 08: SQLite WAL Persistence with Dual Migration Strategy (Alembic + Runtime)
+- **Context:** Level 1 requires SQLite with SQLAlchemy and Alembic migrations, while the production service needs seamless self-healing startup.
+- **Decision:** Implement declarative SQLAlchemy 2.0 ORM models (`backend/database/models.py`) with Alembic autogenerate migrations (`ec4d280c3836_initial_schema.py`), backed by a lightweight runtime migration runner (`backend/database/migrations.py`) executed on FastAPI lifespan startup.
+- **Rationale:** Alembic handles formal schema versioning and batch migrations for SQLite, while the runtime runner ensures zero-config developer onboarding without manual CLI commands.
+
+---
+
+## Decision Record 09: Decoupled Model Registry with Truthful `MODEL_UNAVAILABLE` Default
+- **Context:** Pretrained checkpoints (`abychkov`, `liodon-ai`, `nsitnov`, `BoneLoss-PAN769`) must not be downloaded or executed until independently evaluated and authorized by the user.
+- **Decision:** Model registry adapters strictly default to `status="MODEL_UNAVAILABLE"` when weight files are missing. Input/output shape contracts are strictly verified.
+- **Rationale:** Prevents hallucinated or mock inference numbers. Completely eliminates fake confidence scores from system output.
+
+---
+
+## Decision Record 10: Strict Ingestion Security: Magic Bytes, Traversal Defense, and DICOM Sanitization
+- **Context:** Uploaded images may contain path traversal attacks, corrupted streams, unsupported transfer syntaxes, or patient PHI in DICOM headers.
+- **Decision:** Ingestion performs magic byte detection, full raster decompression testing (`img.load()`), explicit path traversal rejection, unsupported compressed syntax detection (`NotImplementedError`), and patient tag blanking (`PatientName="ANONYMIZED"`).
+- **Rationale:** Ensures zero malicious code execution, zero corrupted studies in the database, and zero patient PHI leakage into previews or logs.
+
