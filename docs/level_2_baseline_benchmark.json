@@ -1,0 +1,93 @@
+{
+  "benchmark_metadata": {
+    "model_id": "liodon-panoramic-screener",
+    "model_name": "Liodon Panoramic Anomaly Screener",
+    "version": "1.0.0",
+    "weights_hash_sha256": "4cee38b54203634d895ed30a8910f5d7c4cefe22b18f9116b5561d9dd6e83a71",
+    "execution_provider": "CPUExecutionProvider",
+    "conf_threshold": 0.25,
+    "iou_threshold": 0.35,
+    "evaluation_date": "2026-10-19",
+    "split_type": "exploratory_dev_evaluation",
+    "total_images": 141,
+    "provenance_disclaimer": "EXPLORATORY EVALUATION NOTICE: The candidate model liodon-ai/dental-panoramic-detector was pretrained by its authors on combined DENTEX + OralXrays-9 data. Therefore, this benchmark serves as an exploratory reproducibility and sanity check baseline rather than a zero-shot independent clinical validation. Zero synthetic scores were generated."
+  },
+  "metrics_summary": {
+    "mAP50": 0.6429,
+    "mAP50_95": 0.4323,
+    "per_class": {
+      "caries": {
+        "ground_truth_count": 548,
+        "prediction_count": 814,
+        "true_positives": 379,
+        "false_positives": 435,
+        "false_negatives": 169,
+        "precision": 0.4656,
+        "recall": 0.6916,
+        "f1": 0.5565,
+        "ap50": 0.4967,
+        "ap50_95": 0.3694
+      },
+      "periapical_lesion": {
+        "ground_truth_count": 32,
+        "prediction_count": 38,
+        "true_positives": 22,
+        "false_positives": 16,
+        "false_negatives": 10,
+        "precision": 0.5789,
+        "recall": 0.6875,
+        "f1": 0.6286,
+        "ap50": 0.5872,
+        "ap50_95": 0.408
+      },
+      "impacted_tooth": {
+        "ground_truth_count": 109,
+        "prediction_count": 127,
+        "true_positives": 101,
+        "false_positives": 26,
+        "false_negatives": 8,
+        "precision": 0.7953,
+        "recall": 0.9266,
+        "f1": 0.8559,
+        "ap50": 0.8447,
+        "ap50_95": 0.5195
+      },
+      "alveolar_bone_loss": "UNSUPPORTED",
+      "root_canal_treatment": "UNSUPPORTED",
+      "treated_tooth_with_radiolucency": "UNSUPPORTED"
+    }
+  },
+  "latency_profile_ms": {
+    "mean_ms": 510.55,
+    "median_p50_ms": 583.85,
+    "p95_ms": 723.42,
+    "min_ms": 51.2,
+    "max_ms": 819.66
+  },
+  "peak_ram_mb": 10.28,
+  "class_imbalance": {
+    "total_images": 705,
+    "total_annotations": 3529,
+    "class_counts_3_class": {
+      "caries": 2767,
+      "periapical_lesion": 158,
+      "impacted_tooth": 604
+    },
+    "class_percentages": {
+      "caries": 78.41,
+      "periapical_lesion": 4.48,
+      "impacted_tooth": 17.12
+    },
+    "raw_dentex_categories": {
+      "0_impacted": 604,
+      "1_caries": 2189,
+      "2_periapical_lesion": 158,
+      "3_deep_caries": 578
+    },
+    "unsupported_in_dentex": [
+      "alveolar_bone_loss",
+      "root_canal_treatment",
+      "treated_tooth_with_radiolucency"
+    ]
+  }
+}

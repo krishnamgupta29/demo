@@ -1,7 +1,7 @@
 """API Router configuration aggregating v1 versioned endpoints."""
 
 from fastapi import APIRouter
-from backend.api.routes import health, models, studies
+from backend.api.routes import health, models, studies, clinical, insurance
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -9,6 +9,8 @@ api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(health.router)
 api_router.include_router(studies.router)
 api_router.include_router(models.router)
+api_router.include_router(clinical.router)
+api_router.include_router(insurance.router)
 
 # Health routes remain at root and v1
 root_router = APIRouter()

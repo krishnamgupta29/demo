@@ -1,6 +1,6 @@
 """FDI two-digit tooth notation and tooth boundary schemas."""
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Optional
 from pydantic import Field, field_validator
 from .base import ClinicalBaseModel
 
@@ -43,10 +43,11 @@ VALID_FDI_TEETH = {
 class ToothBox(ClinicalBaseModel):
   """Bounding box localization of a single permanent tooth in FDI notation."""
 
-  fdi_number: int = Field(
-      ...,
+  fdi_number: Optional[int] = Field(
+      default=None,
       description=(
-          "Two-digit FDI permanent tooth number (11-18, 21-28, 31-38, 41-48)"
+          "Two-digit FDI permanent tooth number (11-18, 21-28, 31-38, 41-48), "
+          "or None if ambiguous/uncertain"
       ),
       examples=[16, 21, 38, 46],
   )
@@ -57,11 +58,15 @@ class ToothBox(ClinicalBaseModel):
   confidence: float = Field(
       ..., ge=0.0, le=1.0, description="Detection confidence score"
   )
+  uncertain_tooth: bool = Field(
+      default=False,
+      description="True when tooth numbering is ambiguous or marginal"
+  )
 
   @field_validator("fdi_number")
   @classmethod
-  def validate_fdi(cls, v: int) -> int:
-    if v not in VALID_FDI_TEETH:
+  def validate_fdi(cls, v: Optional[int]) -> Optional[int]:
+    if v is not None and v not in VALID_FDI_TEETH:
       raise ValueError(
           f"Invalid FDI permanent tooth number: {v}. Must be in {sorted(VALID_FDI_TEETH)}"
       )
@@ -82,12 +87,12 @@ class ToothBox(ClinicalBaseModel):
     return v
 
   @property
-  def quadrant(self) -> int:
-    return self.fdi_number // 10
+  def quadrant(self) -> Optional[int]:
+    return (self.fdi_number // 10) if self.fdi_number else None
 
   @property
-  def position(self) -> int:
-    return self.fdi_number % 10
+  def position(self) -> Optional[int]:
+    return (self.fdi_number % 10) if self.fdi_number else None
 
   @property
   def area(self) -> float:

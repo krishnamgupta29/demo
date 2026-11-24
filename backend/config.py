@@ -6,9 +6,32 @@ Enforces:
 3. Immutable clinical regulatory notice injection.
 """
 
+import os
 from pathlib import Path
+from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def get_default_data_dir() -> Path:
+  """Resolve user-writable application data directory for DENTRACE.
+
+  Precedence:
+  1. DENTRACE_DATA_DIR environment variable
+  2. If DENTRACE_DEV_MODE == "1" (default) and (PROJECT_ROOT / "data") exists: use project data dir
+  3. %LOCALAPPDATA%/DENTRACE/data
+  4. Fallback to PROJECT_ROOT / "data"
+  """
+  if "DENTRACE_DATA_DIR" in os.environ:
+    return Path(os.environ["DENTRACE_DATA_DIR"])
+  
+  detected_root = Path(__file__).resolve().parents[1]
+  if os.environ.get("DENTRACE_DEV_MODE", "1") == "1" and (detected_root / "data").exists():
+    return detected_root / "data"
+  local_app_data = os.environ.get("LOCALAPPDATA")
+  if local_app_data:
+    return Path(local_app_data) / "DENTRACE" / "data"
+  return detected_root / "data"
 
 
 class Settings(BaseSettings):
@@ -30,12 +53,18 @@ class Settings(BaseSettings):
   HOST: str = "127.0.0.1"
   PORT: int = 8000
 
-  # Storage Constraints (Strictly on C: drive)
-  PROJECT_ROOT: Path = Path("C:/mini")
-  DATA_DIR: Path = Path("C:/mini/data")
-  STORAGE_DIR: Path = Path("C:/mini/data/storage")
-  PREVIEW_DIR: Path = Path("C:/mini/data/previews")
-  SQLITE_DB_PATH: Path = Path("C:/mini/data/dentrace.db")
+  # Storage Constraints (User-writable directory, strictly on C: drive)
+  PROJECT_ROOT: Path = Field(default_factory=lambda: Path(__file__).resolve().parents[1])
+  DATA_DIR: Path = Field(default_factory=get_default_data_dir)
+  STORAGE_DIR: Path = Field(default_factory=lambda: get_default_data_dir() / "storage")
+  PREVIEW_DIR: Path = Field(default_factory=lambda: get_default_data_dir() / "previews")
+  SQLITE_DB_PATH: Path = Field(default_factory=lambda: get_default_data_dir() / "dentrace.db")
+
+  # Local Access Control (Level 9 Single-User Token)
+  LOCAL_API_KEY: Optional[str] = Field(
+      default_factory=lambda: os.environ.get("DENTRACE_API_KEY") or os.environ.get("DENTRACE_LOCAL_TOKEN"),
+      description="Ephemeral local single-user access token. If set, required on clinical endpoints.",
+  )
 
   # Upload Constraints
   MAX_UPLOAD_SIZE_BYTES: int = 50 * 1024 * 1024  # 50 MB

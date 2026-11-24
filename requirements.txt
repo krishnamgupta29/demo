@@ -1,41 +1,57 @@
 # ==============================================================================
-# DENTRACE Dependencies (Target: Python 3.11.9 on Windows x64)
+# DENTRACE Dependencies — Level 8 Audited (Python 3.11.9 on Windows x64)
+# Last audited: 2026-10-22 — Level 8 dependency audit
+#
+# IMPORTANT: requirements.txt specifies MINIMUM versions and TESTED upper bounds.
+# The actual installed environment has been validated with versions listed in
+# docs/LEVEL_8_DEPENDENCY_AUDIT.md. If re-creating the venv from scratch,
+# run: pip install -r requirements.txt
+# and then verify with: py -3.11 scripts/verify_dependencies.py
 # ==============================================================================
 
 # Core Web & API Frameworks
-fastapi>=0.115.0,<0.116.0
-uvicorn[standard]>=0.30.0,<0.31.0
+# Tested: fastapi 0.146.0 — fully compatible; use >=0.115 for lifespan support
+fastapi>=0.115.0,<0.200.0
+uvicorn[standard]>=0.30.0,<1.0.0
 pydantic>=2.9.0,<3.0.0
+pydantic-settings>=2.0.0,<3.0.0
 python-multipart>=0.0.12
 
 # Database & Migrations (SQLite + WAL)
 sqlalchemy>=2.0.0,<2.1.0
-alembic>=1.13.0,<1.14.0
+alembic>=1.13.0,<2.0.0
 
 # Medical Imaging (DICOM)
 pydicom>=2.4.0,<3.0.0
 
 # Clinical Frontend
+# NOTE: streamlit 1.39.1 declares pillow<11 dependency but works with 13.0.0 at runtime.
+# The version conflict warning is cosmetic; all tested features function correctly.
 streamlit>=1.38.0,<1.40.0
 
-# Scientific, Computer Vision & PyTorch (CPU + CUDA 12.x/13.x compatible)
-numpy>=1.24.0,<2.0.0
-scipy>=1.11.0,<1.15.0
-opencv-python>=4.9.0,<4.11.0
-Pillow>=10.2.0,<11.0.0
+# Scientific, Computer Vision & ML
+# Tested: numpy 2.4.6 — compatible with onnxruntime 1.31.0 and PIL 13.0.0
+numpy>=1.24.0,<3.0.0
+scipy>=1.11.0,<2.0.0
+# Tested: opencv-python 5.0.0 — all used APIs (cv2.resize, cv2.cvtColor) remain stable
+opencv-python>=4.9.0,<6.0.0
+# Tested: Pillow 13.0.0 — Image.Resampling.LANCZOS, Image.open, img.load() all verified
+Pillow>=10.2.0,<14.0.0
 
 # Inference & Acceleration
-onnx>=1.16.0,<1.17.0
-onnxruntime>=1.18.0,<1.20.0
+# Tested: onnx 1.23.2, onnxruntime 1.31.0 — CPUExecutionProvider stable
+onnx>=1.16.0,<2.0.0
+onnxruntime>=1.18.0,<2.0.0
 
-# Local LLM Integration
-ollama>=0.3.0,<0.5.0
-httpx>=0.27.0,<0.29.0
+# Local LLM Integration (Zero Cloud Egress)
+ollama>=0.3.0,<1.0.0
+httpx>=0.27.0,<1.0.0
 
-# Clinical Report Generation (PDF)
-reportlab>=4.2.0,<4.3.0
+# Clinical Report Generation (PDF — local only)
+# Tested: reportlab 5.0.1 — canvas, Paragraph, TableStyle all compatible
+reportlab>=4.2.0,<6.0.0
 
 # Testing & Quality Assurance
-pytest>=8.3.0,<9.0.0
-pytest-asyncio>=0.23.0,<0.25.0
-requests>=2.32.0,<2.33.0
+pytest>=8.3.0,<10.0.0
+pytest-asyncio>=0.23.0,<1.0.0
+requests>=2.32.0,<3.0.0

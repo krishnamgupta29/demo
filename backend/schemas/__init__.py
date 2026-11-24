@@ -33,6 +33,8 @@ from .study import (
 )
 from .tooth import VALID_FDI_TEETH, ToothBox, ToothSegmentationPolygon
 
+from .analysis import AnalysisRequest, AnalysisResponse
+
 __all__ = [
     "ClinicalBaseModel",
     "VALID_FDI_TEETH",
@@ -62,4 +64,6 @@ __all__ = [
     "CDTCodeReference",
     "ProcedureSelection",
     "PreAuthNarrativeDraft",
+    "AnalysisRequest",
+    "AnalysisResponse",
 ]

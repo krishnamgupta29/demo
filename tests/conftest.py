@@ -8,12 +8,18 @@ Enforces:
 
 import io
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 import numpy as np
 from PIL import Image
 import pytest
 from fastapi.testclient import TestClient
+
+# Ensure legacy archived frontend modules remain discoverable for legacy integration test suites
+LEGACY_FRONTEND_DIR = Path(__file__).resolve().parents[1] / "archive" / "legacy_streamlit_frontend"
+if LEGACY_FRONTEND_DIR.exists() and str(LEGACY_FRONTEND_DIR.parent) not in sys.path:
+  sys.path.insert(0, str(LEGACY_FRONTEND_DIR.parent))
 
 from backend.config import settings
 from backend.database.connection import get_connection
@@ -162,3 +168,21 @@ def synthetic_unsupported_compressed_dicom() -> bytes:
   buf = io.BytesIO()
   ds.save_as(buf, write_like_original=False)
   return buf.getvalue()
+
+
+@pytest.fixture
+def synthetic_test_study(synthetic_opg_png: bytes) -> str:
+  """Create a temporary study in the test DB and yield its study_id."""
+  from backend.services.study_service import study_service
+  study = study_service.create_study(
+      raw_bytes=synthetic_opg_png,
+      original_filename="synthetic_fixture.png",
+      patient_anonymous_id="PT-SYNTH-99",
+      clinical_indication="Automated test fixture",
+  )
+  yield study.study_id
+  try:
+    study_service.delete_study(study.study_id)
+  except Exception:
+    pass
+

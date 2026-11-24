@@ -1,0 +1,146 @@
+{
+  "_schema_version": "1.0.0",
+  "_comment": "DENTRACE Level 9 Official Model Manifest and Distribution Policy. Governs redistribution rights and integrity hashes.",
+  "models": [
+    {
+      "model_id": "liodon-panoramic-screener",
+      "model_name": "Liodon Panoramic Anomaly Screener",
+      "architecture": "YOLO11n (Ultralytics Nano)",
+      "version": "1.0.0",
+      "sha256": "4cee38b54203634d895ed30a8910f5d7c4cefe22b18f9116b5561d9dd6e83a71",
+      "license": "CC BY-NC 4.0 (Non-Commercial)",
+      "supported_classes": [
+        "caries",
+        "periapical_lesion",
+        "impacted_tooth"
+      ],
+      "local_file_location": "models/checkpoints/best.onnx",
+      "distribution_permitted": false,
+      "redistribution_rationale": "CC BY-NC 4.0 license permits academic research use and distribution for educational research with attribution, but commercial packaging is prohibited. Shipped in separate authorized Offline Model Pack.",
+      "required_installation_action": "Copy best.onnx into models/checkpoints/ or supply through the DENTRACE Model Pack."
+    },
+    {
+      "model_id": "liodon-panoramic-screener-int8",
+      "model_name": "Liodon Panoramic Anomaly Screener (INT8 Quantized)",
+      "architecture": "YOLO11n (Dynamic INT8 Quantized)",
+      "version": "1.0.0",
+      "sha256": "4d7c6b5464d9425c0d195443d81d73a4ad78a3c2a07e720fba7459e94ce5e393",
+      "license": "CC BY-NC 4.0 (Non-Commercial)",
+      "supported_classes": [
+        "caries",
+        "periapical_lesion",
+        "impacted_tooth"
+      ],
+      "local_file_location": "models/checkpoints/best_int8.onnx",
+      "distribution_permitted": false,
+      "redistribution_rationale": "Derived from liodon-ai under CC BY-NC 4.0. Stored in authorized Offline Model Pack.",
+      "required_installation_action": "Copy best_int8.onnx into models/checkpoints/ if lightweight edge deployment is needed."
+    },
+    {
+      "model_id": "abychkov-fdi-detection",
+      "model_name": "Dental FDI 32-Tooth Detector",
+      "architecture": "RT-DETR Transformer Object Detector",
+      "version": "1.0.0",
+      "sha256": "426ddf210f339669f069bf41e0a4f225c72c4667ffb7f71c310112cfd7481f8a",
+      "license": "Open Community / Educational Research",
+      "supported_classes": [
+        "11", "12", "13", "14", "15", "16", "17", "18",
+        "21", "22", "23", "24", "25", "26", "27", "28",
+        "31", "32", "33", "34", "35", "36", "37", "38",
+        "41", "42", "43", "44", "45", "46", "47", "48"
+      ],
+      "local_file_location": "models/checkpoints/dental_fdi.onnx",
+      "distribution_permitted": false,
+      "redistribution_rationale": "Third-party research checkpoint. Permitted for local academic evaluation; redistribution restricted to authorized academic bundles.",
+      "required_installation_action": "Copy dental_fdi.onnx into models/checkpoints/."
+    },
+    {
+      "model_id": "dentex-yolov8n-seg",
+      "model_name": "DENTEX 4-Class Abnormal-Tooth Instance Segmenter",
+      "architecture": "YOLOv8n-seg (Transfer Fine-Tuned)",
+      "version": "1.0.0",
+      "sha256": "32fb75fe29fc2d0d6ee21f79d7f93fc37fd4248e88080823e30691c7a094c435",
+      "license": "CC BY-NC 4.0 (DENTEX Challenge Academic Terms)",
+      "supported_classes": [
+        "impacted_tooth",
+        "caries",
+        "periapical_lesion",
+        "deep_caries"
+      ],
+      "local_file_location": "models/checkpoints/dentex_yolov8n_seg.onnx",
+      "distribution_permitted": false,
+      "redistribution_rationale": "Trained on DENTEX Challenge dataset under academic research license. Public redistribution prohibited without MICCAI challenge committee authorization.",
+      "required_installation_action": "Copy dentex_yolov8n_seg.onnx into models/checkpoints/ from local training artifacts or secure institutional repository."
+    },
+    {
+      "model_id": "dentex-yolov8n-seg-int8",
+      "model_name": "DENTEX 4-Class Abnormal-Tooth Segmenter (INT8 Quantized)",
+      "architecture": "YOLOv8n-seg (Dynamic INT8 Quantized)",
+      "version": "1.0.0",
+      "sha256": "27c63954cfb4aa47e2dcc2437663e6b29751379c04c53c853fe7c3ae32756f68",
+      "license": "CC BY-NC 4.0 (DENTEX Challenge Academic Terms)",
+      "supported_classes": [
+        "impacted_tooth",
+        "caries",
+        "periapical_lesion",
+        "deep_caries"
+      ],
+      "local_file_location": "models/checkpoints/dentex_yolov8n_seg_int8.onnx",
+      "distribution_permitted": false,
+      "redistribution_rationale": "Quantized weights derived from DENTEX training. Academic non-commercial license applies.",
+      "required_installation_action": "Copy dentex_yolov8n_seg_int8.onnx into models/checkpoints/."
+    },
+    {
+      "model_id": "nsitnov-8024-seg",
+      "model_name": "Nsitnov Dental Restorations & Lesions Segmenter",
+      "architecture": "YOLOv8-seg",
+      "version": "1.0.0",
+      "sha256": "36b2eca68e32116484ffae6f110f2e5dbf182e06cd4f4c05c98fb15dd3cdad8c",
+      "license": "Apache 2.0 (Permissive Open Source)",
+      "supported_classes": [
+        "Caries",
+        "Crown",
+        "Filling",
+        "Implant",
+        "Missing-tooth",
+        "Periapical-lesion",
+        "Root Piece",
+        "Root-Canal-Treatment"
+      ],
+      "local_file_location": "models/checkpoints/8024.onnx",
+      "distribution_permitted": true,
+      "redistribution_rationale": "Apache 2.0 license permits redistribution with copyright notice and disclaimer.",
+      "required_installation_action": "Bundled or supplied via models/checkpoints/8024.onnx."
+    },
+    {
+      "model_id": "boneloss-pan769-baseline",
+      "model_name": "BoneLoss-PAN769 Alveolar Crest Line Detector",
+      "architecture": "ResNet50 / U-Net Crestline Estimator",
+      "version": "1.0.0",
+      "sha256": null,
+      "license": "Academic Research Only",
+      "supported_classes": [
+        "alveolar_bone_loss",
+        "cej_line",
+        "crestal_bone_line"
+      ],
+      "local_file_location": "models/checkpoints/boneloss_pan769.onnx",
+      "distribution_permitted": false,
+      "redistribution_rationale": "BLOCKED: Lacks required anatomical reference landmarks in DENTEX. Prohibited from activation.",
+      "required_installation_action": "Do NOT install. Model is intentionally deactivated with UNSUPPORTED_MISSING_LANDMARKS blocker."
+    },
+    {
+      "model_id": "ollama-qwen25-3b",
+      "model_name": "Qwen 2.5 3B Instruct (Ollama)",
+      "architecture": "Decoder-only Transformer LLM (3.09B params)",
+      "version": "2.5",
+      "sha256": null,
+      "license": "Tongyi Qianwen Research & Commercial License",
+      "supported_classes": ["clinical_narrative_drafting"],
+      "local_file_location": "http://127.0.0.1:11434 (model tag: qwen2.5:3b)",
+      "distribution_permitted": true,
+      "redistribution_rationale": "Managed locally by Ollama runtime. Open weights free for academic decision-support.",
+      "required_installation_action": "Run 'ollama pull qwen2.5:3b' or supply through offline Ollama model cache."
+    }
+  ]
+}

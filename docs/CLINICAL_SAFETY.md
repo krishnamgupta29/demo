@@ -50,16 +50,24 @@ Dental panoramic radiographs (OPGs) are screening tools with inherent physical a
 
 ---
 
-## 4. Human-in-the-Loop Workflow
+## 4. Human-in-the-Loop Workflow & Level 4 Gating Controls
 
 ```
- AI Vision Model Prediction
+ AI Vision Model Prediction (Unverified Observations)
             │
             ▼
- Deterministic Clinical Rules ──► Evaluates Urgency & Endo Failure
+ Deterministic Clinical Evidence Engine (Pre-LLM Gate)
+    ├── Concept Separation (AI Observations vs Clinician Facts vs Payer Checklist)
+    ├── Missing Evidence Detective (Detects unperformed tests & missing records)
+    ├── FDI Ambiguity Blocking (Unconfirmed teeth -> BLOCKED_BY_UNCONFIRMED_TOOTH)
+    └── Contradiction Checker (Flags vital pulp endo, rejected finding procedures)
             │
             ▼
- Local LLM Narrative Draft
+ Local Ollama Narrative Synthesis (Isolated Prompt Boundary)
+            │
+            ▼
+ Deterministic Faithfulness Checker (Rejects Hallucinations / Enforces Uncertainty)
+    └── Auto-revert to Deterministic Fallback if ungrounded claims detected
             │
             ▼
  ┌─────────────────────────────────────────────────────────┐
@@ -67,10 +75,28 @@ Dental panoramic radiographs (OPGs) are screening tools with inherent physical a
  │ - Review color-coded masks on interactive canvas        │
  │ - Inspect FDI tooth numbering on odontogram             │
  │ - Edit/correct narrative medical necessity justification│
- │ - Approve or reject individual findings                 │
+ │ - Approve, modify, or reject individual findings        │
  └─────────────────────────────────────────────────────────┘
             │
             ▼
- Dentist Physical Signature Line on Finalized Claim Pack PDF
+ ReportLab Local PDF Claim Pack Generation
+    ├── Prominent "PROVISIONAL REVIEW DRAFT" badge if incomplete
+    └── Pen-and-ink dentist physical signature block (Zero fake signatures)
 ```
-No claim pack PDF can be submitted to an insurance payer without a licensed dental practitioner's clinical attestation and signature.
+No claim pack PDF can be submitted to an insurance payer without a licensed dental practitioner's clinical attestation and physical signature. Preflight status remains gated: under no circumstances does DENTRACE claim autonomous approval or guarantee payer payment.
+
+---
+
+## 7. Level 9 Desktop Packaging & Operational Safety Directives
+
+1. **Mandatory Startup Disclaimer**:
+   - The launcher console (`scripts/launcher/launcher.py`) explicitly displays the regulatory notice:
+     `"DENTRACE Decision Support — Draft for dentist review. Not a diagnosis."`
+2. **Local Air-Gap Security**:
+   - Workstation code binds strictly to `127.0.0.1`, guaranteeing that Protected Health Information (PHI) and dental radiographs never leave the local clinic machine.
+3. **Burned-In Annotation Safety**:
+   - Peripheral radiograph borders are scanned for legacy burned-in patient names.
+   - To preserve alveolar crest and mandibular margins necessary for pathology evaluation, detected text regions are flagged for review rather than indiscriminately cropped or infilled.
+4. **Single-Instance Integrity**:
+   - Workstation enforces single-user execution via `.dentrace.lock` to prevent conflicting multi-operator edits to clinical records.
+

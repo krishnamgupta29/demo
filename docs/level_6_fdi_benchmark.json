@@ -1,0 +1,23 @@
+{
+  "dataset": "DENTEX train_quadrant_enumeration.json (150 images, 4,224 teeth)",
+  "baseline_level_3": {
+    "total_teeth": 4224,
+    "quadrant_accuracy": 98.63,
+    "overall_exact_fdi_accuracy": 74.55,
+    "abstained_teeth": 46,
+    "abstention_rate": 1.09,
+    "coverage_rate": 98.91,
+    "effective_precision_non_abstained": 75.37,
+    "avg_latency_ms": 1.08
+  },
+  "calibrated_level_6": {
+    "total_teeth": 4224,
+    "quadrant_accuracy": 98.63,
+    "overall_exact_fdi_accuracy": 76.07,
+    "abstained_teeth": 27,
+    "abstention_rate": 0.64,
+    "coverage_rate": 99.36,
+    "effective_precision_non_abstained": 76.55,
+    "avg_latency_ms": 1.08
+  }
+}

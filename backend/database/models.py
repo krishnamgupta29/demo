@@ -85,6 +85,7 @@ class RadiographModel(Base):
   blur_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
   aspect_ratio_valid: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
   resolution_valid: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+  modality: Mapped[str] = mapped_column(String(32), default="unknown", nullable=False)
 
   study: Mapped["StudyModel"] = relationship("StudyModel", back_populates="radiograph")
 

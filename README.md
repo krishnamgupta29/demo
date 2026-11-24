@@ -52,7 +52,6 @@ d:/mini
 ├── config/                   # Settings, class mappings, and CDT demo codes
 ├── .streamlit/               # Streamlit config (telemetry disabled)
 ├── .env.example              # Environment variables template
-├── .gitignore                # Privacy and storage exclusion rules
 ├── AGENTS.md                 # Multi-agent directives and rules
 ├── requirements.txt          # Python 3.11 dependencies
 └── README.md
@@ -60,38 +59,46 @@ d:/mini
 
 ---
 
-## 4. Phase Status: Level 1 (Core Foundation & Data Integration) — COMPLETE
+## 4. Phase Status Summary: ALL LEVELS COMPLETE — SUBMISSION READY
 
-Level 1 established the core foundation and data integration layer:
-- **DENTEX Dataset Extraction:** Safely extracted 3,606 training files (13.71 GB) and 51 validation files (0.19 GB) to `C:\mini\datasets\dentex\raw/`. Forensic manifest created at `docs/dataset_inventory.json` with 100% polygon coverage (3,529 disease polygons, 18,095 tooth contour polygons).
-- **FastAPI Backend Core:** Production-ready REST endpoints under `/api/v1` for health, readiness, study intake, study detail, study list, web preview raster, study deletion, and model registry.
-- **Database & Persistence:** SQLite with WAL mode, SQLAlchemy 2.0 ORM models, Alembic migrations (`ec4d280c3836_initial_schema.py`), and runtime auto-migration manager.
-- **Security & DICOM:** Header validation, corruption rejection, path traversal defense, oversized payload rejection, DICOM transfer syntax validation, patient PHI sanitization.
-- **Model Registry:** 4 registered candidates (`abychkov`, `liodon-ai`, `nsitnov`, `BoneLoss-PAN769`) with truthful `MODEL_UNAVAILABLE` defaults.
-- **Automated Tests:** 33/33 automated tests passing in `tests/` (`docs/LEVEL_1_TEST_REPORT.md`).
+- **Levels 1–5 (Foundations & Clinical UI)**: Datasets, baselines, segmentation, deterministic clinical rules, local Ollama narrative synthesis, interactive canvas viewer, and permanent 32-tooth odontogram.
+- **Level 6 & 6.1 (Model Optimization & Repairs)**: Converged YOLOv8n-Seg (0.446 Mask mAP50), calibrated FDI solver (76.07% accuracy), ONNX FP32 production inference (113 ms), endodontic safety semantics, and landmark-absent bone loss blocking.
+- **Level 7 (End-to-End Integration)**: Full pipeline orchestration across DICOM intake, multi-model execution, FDI tooth enumeration, deterministic evidence extraction, Ollama pre-auth drafting, and ReportLab PDF claim export.
+- **Level 8 (System Hardening & Security)**: Defense-in-depth across API boundaries (headers, restricted CORS), DICOM privacy sanitization, SQLite WAL mode with zero-lock transactions, rate limiting, and regulatory disclaimers.
+- **Level 9 (Desktop Packaging & Release Validation)**: Native Windows desktop deployment:
+  * **Supervisor Process Launcher**: Single-instance mutex lock (`.dentrace.lock`), 5 preflight health checks (ports 8000/8501, DB migration, SHA-256 weight integrity, CUDA/Ollama detection), zero-orphan child termination (`taskkill /F /T /PID`).
+  * **Local Security**: Ephemeral 256-bit token (`X-DENTRACE-TOKEN`) required for mutative API calls.
+  * **Deep DICOM Privacy**: 18 standard PHI tags scrubbed + vendor private tags purged + non-destructive burned-in text detection.
+  * **User Data Isolation**: Separates immutable code from user data (`%LOCALAPPDATA%\DENTRACE\data`).
+  * **Release Deliverables**: Automated packaging producing `dist/DENTRACE-v0.1.0-win64.zip` (446.59 MB), `dist/SHA256SUMS.txt`, and Inno Setup installer script (`scripts/installer/dentrace_setup.iss`).
+  * **QA Validation**: **155 / 155 automated tests passing (100% pass rate)**.
+- **Level 10 (Final System Validation & College Submission Readiness)**: Compulsory requirements audit (96.0% compliance across 25 PS outcomes), scientific model benchmark audit, clinical AI safety governance audit, Windows release validation audit, 6:30-minute faculty demonstration script, and master Final Report (`docs/LEVEL_10_FINAL_REPORT.md`).
 
 ---
 
-## 5. PowerShell Quickstart Instructions
+## 5. Quickstart & Deployment Instructions
 
-All commands run on Windows 11 PowerShell from `C:\mini`:
-
-```powershell
-# 1. Environment Setup & Dependency Installation
-.\scripts\setup_env.ps1
-
-# 2. Execute Automated QA Test Suite (33 tests, 100% pass)
-.\scripts\run_tests.ps1
-
-# 3. Pretrained Model Availability & Benchmarking Suite
-& "C:\mini\.venv\Scripts\python.exe" C:\mini\scripts\benchmark_models.py
-
-# 4. Launch FastAPI Development Backend Server (127.0.0.1:8000)
-.\scripts\start_backend.ps1
+### One-Click Windows Desktop Launch (Production / User Mode)
+Simply double-click the Windows batch launcher in the application root:
+```cmd
+launch_dentrace.bat
 ```
+Or execute via PowerShell:
+```powershell
+.\launch_dentrace.ps1
+```
+The launcher performs automated preflight checks, spawns the supervised background services, injects the ephemeral security token, and automatically opens your default browser to `http://127.0.0.1:8501`.
 
-Backend API Documentation is available locally at:
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- Health Check: `http://127.0.0.1:8000/api/v1/health`
-- Model Registry: `http://127.0.0.1:8000/api/v1/models`
+### Running Automated Test Suite
+From the project root:
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/ -v
+```
+*(All 155 tests pass in ~3.5 minutes)*
 
+### Workstation URLs:
+- **DENTRACE Clinical Workstation UI:** `http://127.0.0.1:8501`
+- **FastAPI Core Backend Swagger UI:** `http://127.0.0.1:8000/docs`
+- **Health Check:** `http://127.0.0.1:8000/api/v1/health`
+
+> **CURRENT STATUS: LEVEL 10 COMPLETE — ALL 155 TESTS PASSING (100%) — COLLEGE SUBMISSION READY.**

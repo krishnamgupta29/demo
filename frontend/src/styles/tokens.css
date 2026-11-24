@@ -1,0 +1,121 @@
+:root {
+  /* =========================================================================
+     DENTRACE Level 21 Design System Tokens — Clinical Warm Neutral
+     Primary: #282b4a | Warm Neutral: #eeebda
+     ========================================================================= */
+
+  /* Primary Palette (#282b4a & shades) */
+  --color-primary: #282b4a;
+  --color-primary-950: #141628;
+  --color-primary-900: #1b1e36;
+  --color-primary-800: #282b4a;
+  --color-primary-700: #383c64;
+  --color-primary-600: #494e80;
+  --color-primary-500: #5d639e;
+  --color-primary-100: #e8e9f2;
+
+  /* Warm Neutral Palette (#eeebda & shades) */
+  --color-warm-bg: #eeebda;
+  --color-warm-surface: #f7f5ed;
+  --color-warm-panel: #ffffff;
+  --color-warm-subtle: #fbf9f4;
+  --color-warm-border: #ded8c4;
+  --color-warm-border-strong: #cbcaa6;
+  --color-warm-accent: #e2dcbf;
+
+  /* Legacy aliases for compatibility */
+  --color-petrol-900: #141628;
+  --color-petrol-800: #282b4a;
+  --color-petrol-700: #383c64;
+  --color-petrol-600: #494e80;
+  
+  --color-jade-700: #15803d;
+  --color-jade-500: #16a34a;
+  --color-jade-400: #22c55e;
+  --color-jade-100: #dcfce7;
+
+  --color-brass-600: #ca8a04;
+  --color-brass-500: #eab308;
+  --color-brass-400: #facc15;
+  --color-brass-100: #fef9c3;
+
+  --color-graphite-900: #1a1c2e;
+  --color-graphite-800: #282b4a;
+  --color-graphite-700: #383c64;
+  --color-graphite-400: #575a75;
+  --color-graphite-200: #94a3b8;
+
+  --color-terracotta-700: #991b1b;
+  --color-terracotta-500: #dc2626;
+  --color-terracotta-100: #fee2e2;
+
+  /* Surfaces */
+  --surface-canvas: #eeebda;
+  --surface-panel: #ffffff;
+  --surface-panel-alt: #f7f5ed;
+  --surface-subtle: #fbf9f4;
+  --surface-border: #ded8c4;
+  --surface-border-strong: #cbcaa6;
+
+  /* OLED Dark Radiograph Viewport Environment */
+  --dark-viewport-bg: #070912;
+  --dark-viewport-panel: #0d101d;
+  --dark-viewport-surface: #141728;
+  --dark-viewport-border: #232742;
+  --dark-viewport-text: #e8e9f2;
+  --dark-viewport-muted: #7b7e98;
+
+  /* Functional Semantics */
+  --text-primary: #282b4a;
+  --text-secondary: #575a75;
+  --text-muted: #767891;
+  --text-inverse: #eeebda;
+
+  --status-sound: #15803d;
+  --status-caries: #facc15;
+  --status-periapical: #dc2626;
+  --status-restoration: #383c64;
+  --status-crown: #ca8a04;
+  --status-confirmed: #15803d;
+  --status-rejected: #64748b;
+
+  /* Typography Scale */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Elevation & Borders */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --shadow-sm: 0 1px 2px rgba(16, 45, 44, 0.05);
+  --shadow-md: 0 4px 12px rgba(16, 45, 44, 0.07);
+  --shadow-lg: 0 12px 28px rgba(16, 45, 44, 0.12);
+
+  /* Transitions */
+  --transition-fast: 140ms ease;
+  --transition-normal: 220ms ease;
+}
+

@@ -129,6 +129,7 @@ def upgrade() -> None:
     sa.Column('blur_score', sa.Float(), nullable=True),
     sa.Column('aspect_ratio_valid', sa.Integer(), nullable=False),
     sa.Column('resolution_valid', sa.Integer(), nullable=False),
+    sa.Column('modality', sa.String(length=32), server_default='unknown', nullable=True),
     sa.ForeignKeyConstraint(['study_id'], ['studies.study_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('study_id')
     )

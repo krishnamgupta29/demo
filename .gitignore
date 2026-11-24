@@ -14,6 +14,13 @@ venv/
 env/
 ENV/
 
+# Node & Frontend
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+*.local
+
 # Sensitive Information & Credentials
 .env
 *.env
@@ -21,14 +28,16 @@ ENV/
 *.key
 kaggle.json
 
-# Local Datasets & Raw Patient Images (STRICT CLINICAL PRIVACY RULE)
-# Note: D: drive has limited capacity (~4.5 GB); datasets must not be stored on D:
-datasets/*
-!datasets/.gitkeep
-!datasets/README.md
+# Databases & Patient Data (STRICT CLINICAL PRIVACY RULE)
+*.db
+*.sqlite
+*.sqlite3
+dentrace.db
 data/*
 !data/.gitkeep
 !data/README.md
+
+# Medical Images & Archives
 *.dcm
 *.dicom
 *.tiff
@@ -41,10 +50,16 @@ data/*
 *.tar.gz
 *.7z
 
-# Model Weights & Checkpoints (Do not commit binary weights)
+# Model Weights & Binary Checkpoints (Strictly local)
 models/*
 !models/.gitkeep
 !models/README.md
+ml/models/*
+!ml/models/.gitkeep
+!ml/models/README.md
+ml/weights/*
+!ml/weights/.gitkeep
+ml/runs/*
 ml/checkpoints/*
 !ml/checkpoints/.gitkeep
 *.pt
@@ -54,10 +69,20 @@ ml/checkpoints/*
 *.engine
 *.safetensors
 
+# Datasets
+datasets/*
+!datasets/.gitkeep
+!datasets/README.md
+ml/datasets/*
+!ml/datasets/.gitkeep
+!ml/datasets/README.md
+
+# Archive & Scratch
+archive/
+scratch/
+
 # Experiments & Logs
 experiments/*
-!experiments/.gitkeep
-!experiments/README.md
 logs/
 *.log
 backend.log

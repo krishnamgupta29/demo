@@ -1,0 +1,221 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: var(--color-warm-bg, #eeebda);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Browser Surfaces Theming (Impeccable Craft Floor) */
+::selection {
+  background: rgba(40, 43, 74, 0.30);
+  color: #FFFFFF;
+}
+
+::-moz-selection {
+  background: rgba(40, 43, 74, 0.30);
+  color: #FFFFFF;
+}
+
+:focus-visible {
+  outline: 2px solid #282b4a;
+  outline-offset: 2px;
+}
+
+/* Tabular figures for clinical data tables & coordinates */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-border-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-jade-500);
+}
+
+/* Typography elements */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  color: var(--color-petrol-800);
+  letter-spacing: -0.015em;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* Form input base styling */
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 8px 12px;
+  background: #FFFFFF;
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-jade-500);
+  box-shadow: 0 0 0 2px rgba(79, 129, 117, 0.15);
+}
+
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: none;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+}
+
+/* Button variants */
+.btn-primary {
+  background: var(--color-petrol-800);
+  color: var(--surface-panel);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-petrol-900);
+}
+
+.btn-primary:hover {
+  background: var(--color-petrol-700);
+  border-color: var(--color-petrol-800);
+}
+
+.btn-secondary {
+  background: var(--surface-panel);
+  color: var(--color-petrol-800);
+  font-weight: 500;
+  font-size: var(--text-sm);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--surface-border);
+}
+
+.btn-secondary:hover {
+  background: var(--surface-subtle);
+  border-color: var(--surface-border-strong);
+}
+
+.btn-accent {
+  background: var(--color-brass-500);
+  color: #FFFFFF;
+  font-weight: 500;
+  font-size: var(--text-sm);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+}
+
+.btn-accent:hover {
+  background: var(--color-brass-600);
+}
+
+.btn-danger {
+  background: var(--color-terracotta-500);
+  color: #FFFFFF;
+  font-weight: 500;
+  font-size: var(--text-sm);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+}
+
+.btn-danger:hover {
+  background: var(--color-terracotta-700);
+}
+
+/* Badge tags */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.badge-petrol {
+  background: var(--color-petrol-800);
+  color: var(--surface-subtle);
+}
+
+.badge-jade {
+  background: var(--color-jade-100);
+  color: var(--color-jade-700);
+  border: 1px solid rgba(79, 129, 117, 0.3);
+}
+
+.badge-brass {
+  background: var(--color-brass-100);
+  color: var(--color-brass-600);
+  border: 1px solid rgba(184, 154, 99, 0.3);
+}
+
+.badge-terracotta {
+  background: var(--color-terracotta-100);
+  color: var(--color-terracotta-700);
+  border: 1px solid rgba(185, 107, 85, 0.3);
+}

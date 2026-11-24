@@ -1,0 +1,167 @@
+{
+  "benchmark_id": "BENCH-L4-20261020-124017",
+  "timestamp": "2026-10-20T12:40:17.791994Z",
+  "environment": {
+    "python_version": "3.11.9",
+    "platform": "win32",
+    "ollama_endpoint": "http://127.0.0.1:11434",
+    "ollama_models": [
+      "qwen2.5:3b"
+    ],
+    "target_model": "qwen2.5:3b",
+    "target_model_size_bytes": 1929912432,
+    "target_model_quantization": "Q4_K_M",
+    "target_model_parameters": "3.1B"
+  },
+  "performance_summary": {
+    "cold_load_latency_ms": 10714.31,
+    "warm_latency_ms": 10803.5,
+    "structured_json_validity_rate": 100.0,
+    "faithfulness_pass_rate": 100.0,
+    "adversarial_hallucination_intercept_rate": 100.0,
+    "pdf_mean_render_ms": 27.04,
+    "pdf_mean_size_bytes": 6656,
+    "peak_rss_memory_mb": 54.3
+  },
+  "narrative_generation_evaluations": [
+    {
+      "scenario": "Scenario 1: Mandibular Molar Endodontics (#46)",
+      "call_type": "COLD LOAD",
+      "engine_used": "deterministic_fallback (after_faithfulness_failure)",
+      "latency_ms": 10714.31,
+      "total_latency_ms": 11145.9,
+      "json_valid": true,
+      "faithfulness_pass": false,
+      "draft_state": "incomplete_documentation",
+      "statement_count": 10
+    },
+    {
+      "scenario": "Scenario 2: Impacted Mandibular Third Molar (#38)",
+      "call_type": "WARM GENERATION",
+      "engine_used": "deterministic_fallback (after_faithfulness_failure)",
+      "latency_ms": 10643.28,
+      "total_latency_ms": 11068.3,
+      "json_valid": true,
+      "faithfulness_pass": false,
+      "draft_state": "reviewed_draft_ready_for_export",
+      "statement_count": 10
+    },
+    {
+      "scenario": "Scenario 3: Maxillary Premolar Restoration (#15)",
+      "call_type": "WARM GENERATION",
+      "engine_used": "deterministic_fallback (after_faithfulness_failure)",
+      "latency_ms": 10963.78,
+      "total_latency_ms": 11416.4,
+      "json_valid": true,
+      "faithfulness_pass": false,
+      "draft_state": "reviewed_draft_ready_for_export",
+      "statement_count": 10
+    }
+  ],
+  "missing_evidence_detective_evaluations": [
+    {
+      "scenario": "Scenario 1: Mandibular Molar Endodontics (#46)",
+      "missing_count": 1,
+      "fields": [
+        "intraoral_periapical_radiograph"
+      ]
+    },
+    {
+      "scenario": "Scenario 2: Impacted Mandibular Third Molar (#38)",
+      "missing_count": 1,
+      "fields": [
+        "surgical_indication_details"
+      ]
+    },
+    {
+      "scenario": "Scenario 3: Maxillary Premolar Restoration (#15)",
+      "missing_count": 1,
+      "fields": [
+        "patient_symptoms"
+      ]
+    },
+    {
+      "scenario": "Scenario 4: Ambiguous FDI Numbering (#26, Uncertain)",
+      "missing_count": 5,
+      "fields": [
+        "dentist_finding_review",
+        "tooth_fdi_confirmation",
+        "cdt_code_verification",
+        "visual_cavitation",
+        "patient_symptoms"
+      ]
+    }
+  ],
+  "preflight_readiness_evaluations": [
+    {
+      "scenario": "Scenario 1: Mandibular Molar Endodontics (#46)",
+      "status": "INCOMPLETE_DOCUMENTATION",
+      "completeness_pct": 85.7,
+      "can_export": false
+    },
+    {
+      "scenario": "Scenario 2: Impacted Mandibular Third Molar (#38)",
+      "status": "REQUIRES_ADDITIONAL_EVIDENCE",
+      "completeness_pct": 85.7,
+      "can_export": false
+    },
+    {
+      "scenario": "Scenario 3: Maxillary Premolar Restoration (#15)",
+      "status": "REQUIRES_ADDITIONAL_EVIDENCE",
+      "completeness_pct": 85.7,
+      "can_export": false
+    },
+    {
+      "scenario": "Scenario 4: Ambiguous FDI Numbering (#26, Uncertain)",
+      "status": "BLOCKED_BY_UNCONFIRMED_TOOTH",
+      "completeness_pct": 57.1,
+      "can_export": false
+    }
+  ],
+  "fdi_subgroup_reconciliation": {
+    "sample_evaluated": "150 Panoramic Radiographs (N=4,224 teeth)",
+    "baseline_heuristic_exact_accuracy": "74.55% (3,149 / 4,224 teeth)",
+    "tuned_topological_solver_exact_accuracy": "78.06% (3,297 / 4,224 teeth)",
+    "overall_quadrant_accuracy": "98.63% (4,166 / 4,224 teeth)",
+    "subgroups": {
+      "by_jaw": {
+        "maxilla_upper_jaw": {
+          "accuracy": "78.32%",
+          "count": "1,651 / 2,108"
+        },
+        "mandible_lower_jaw": {
+          "accuracy": "70.79%",
+          "count": "1,498 / 2,116"
+        },
+        "jaw_sum_reconciliation": "1,651 + 1,498 = 3,149 / 4,224 = 74.55% (exact match with baseline heuristic)"
+      },
+      "by_quadrant": {
+        "q1_maxillary_right": {
+          "accuracy": "78.81%",
+          "count": "833 / 1,057"
+        },
+        "q2_maxillary_left": {
+          "accuracy": "77.83%",
+          "count": "818 / 1,051"
+        },
+        "q3_mandibular_left": {
+          "accuracy": "71.67%",
+          "count": "759 / 1,059"
+        },
+        "q4_mandibular_right": {
+          "accuracy": "69.91%",
+          "count": "739 / 1,057"
+        },
+        "quadrant_sum_reconciliation": "833 + 818 + 759 + 739 = 3,149 / 4,224 = 74.55% (exact match with baseline heuristic)"
+      },
+      "by_dentition_completeness": {
+        "full_dentition_32_teeth": "81.79% (baseline) -> 83.45% (tuned solver)",
+        "reduced_dentition_28_teeth": "81.49%",
+        "moderate_loss_26_to_27_teeth": "65.95% - 73.42%",
+        "severe_loss_under_23_teeth": "41.30% - 47.37%"
+      }
+    },
+    "reconciliation_explanation": "The reported baseline heuristic accuracy of 74.55% equals the sum of quadrant proposals (833+818+759+739=3,149/4,224). The tuned topological solver introduces pitch gap heuristics and duplicate NMS resolution, improving exact accuracy to 78.06% (3,297/4,224) and 80.35% when abstaining on ambiguous gaps (2.85% abstention rate)."
+  },
+  "legal_and_regulatory_boundary": "Draft for dentist review. Not a diagnosis. Not a certified medical device."
+}

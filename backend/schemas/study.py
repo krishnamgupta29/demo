@@ -15,8 +15,10 @@ class StudyStatus(str, Enum):
 
   INGESTED = "ingested"
   SCREENED = "screened"
+  ANALYZED = "analyzed"
   REVIEWED = "reviewed"
   ARCHIVED = "archived"
+
 
 
 class RadiographMetadata(ClinicalBaseModel):
@@ -47,6 +49,10 @@ class RadiographMetadata(ClinicalBaseModel):
   )
   is_dicom: bool = Field(
       default=False, description="Flag indicating if image arrived as DICOM"
+  )
+  modality: str = Field(
+      default="panoramic_opg",
+      description="Detected or assigned imaging modality (panoramic_opg, intraoral_periapical, bitewing, unknown)",
   )
   metadata_sanitized: bool = Field(
       default=True,

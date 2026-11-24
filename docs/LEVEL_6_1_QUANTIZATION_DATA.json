@@ -1,0 +1,21 @@
+{
+  "fp32": {
+    "path": "C:\\mini\\models\\checkpoints\\dentex_yolov8n_seg_best.onnx",
+    "size_mb": 13.16,
+    "latency": {
+      "mean_ms": 515.0,
+      "n_runs": 30,
+      "threads": 4
+    }
+  },
+  "int8_dynamic": {
+    "path": "C:\\mini\\models\\checkpoints\\dentex_yolov8n_seg_best_int8.onnx",
+    "size_mb": 3.64,
+    "latency": {
+      "mean_ms": 748.3,
+      "n_runs": 30,
+      "threads": 4
+    },
+    "note": "Dynamic INT8 on CPU may be slower than FP32 due to dequantization overhead."
+  }
+}

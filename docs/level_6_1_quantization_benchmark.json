@@ -1,0 +1,130 @@
+{
+  "ort_version": "1.31.0",
+  "providers": [
+    "AzureExecutionProvider",
+    "CPUExecutionProvider"
+  ],
+  "preprocessing_ms": 17.07,
+  "experiments": {
+    "DENTEX YOLOv8n-Seg (FP32)": {
+      "threads_1": {
+        "mean_ms": 175.23,
+        "p50_ms": 172.88,
+        "p95_ms": 194.03,
+        "min_ms": 161.94,
+        "max_ms": 195.07
+      },
+      "threads_2": {
+        "mean_ms": 126.58,
+        "p50_ms": 122.76,
+        "p95_ms": 154.89,
+        "min_ms": 106.82,
+        "max_ms": 171.5
+      },
+      "threads_4": {
+        "mean_ms": 131.48,
+        "p50_ms": 131.74,
+        "p95_ms": 165.9,
+        "min_ms": 105.36,
+        "max_ms": 218.55
+      },
+      "threads_8": {
+        "mean_ms": 96.04,
+        "p50_ms": 97.6,
+        "p95_ms": 112.44,
+        "min_ms": 70.55,
+        "max_ms": 122.98
+      }
+    },
+    "DENTEX YOLOv8n-Seg (INT8)": {
+      "threads_1": {
+        "mean_ms": 232.83,
+        "p50_ms": 235.56,
+        "p95_ms": 256.01,
+        "min_ms": 207.18,
+        "max_ms": 258.09
+      },
+      "threads_2": {
+        "mean_ms": 176.78,
+        "p50_ms": 177.32,
+        "p95_ms": 195.03,
+        "min_ms": 146.17,
+        "max_ms": 195.56
+      },
+      "threads_4": {
+        "mean_ms": 140.82,
+        "p50_ms": 139.85,
+        "p95_ms": 159.91,
+        "min_ms": 118.49,
+        "max_ms": 162.03
+      },
+      "threads_8": {
+        "mean_ms": 131.53,
+        "p50_ms": 131.67,
+        "p95_ms": 150.26,
+        "min_ms": 104.82,
+        "max_ms": 188.72
+      }
+    },
+    "Panoramic Screener (FP32)": {
+      "threads_1": {
+        "mean_ms": 122.65,
+        "p50_ms": 121.59,
+        "p95_ms": 142.19,
+        "min_ms": 107.26,
+        "max_ms": 149.38
+      },
+      "threads_2": {
+        "mean_ms": 77.72,
+        "p50_ms": 75.24,
+        "p95_ms": 91.92,
+        "min_ms": 63.97,
+        "max_ms": 91.94
+      },
+      "threads_4": {
+        "mean_ms": 63.75,
+        "p50_ms": 61.4,
+        "p95_ms": 74.16,
+        "min_ms": 52.55,
+        "max_ms": 80.12
+      },
+      "threads_8": {
+        "mean_ms": 58.92,
+        "p50_ms": 58.11,
+        "p95_ms": 71.37,
+        "min_ms": 47.34,
+        "max_ms": 86.66
+      }
+    },
+    "Panoramic Screener (INT8)": {
+      "threads_1": {
+        "mean_ms": 157.29,
+        "p50_ms": 154.49,
+        "p95_ms": 183.83,
+        "min_ms": 135.54,
+        "max_ms": 184.67
+      },
+      "threads_2": {
+        "mean_ms": 193.72,
+        "p50_ms": 194.48,
+        "p95_ms": 224.33,
+        "min_ms": 153.19,
+        "max_ms": 227.28
+      },
+      "threads_4": {
+        "mean_ms": 105.55,
+        "p50_ms": 103.82,
+        "p95_ms": 122.91,
+        "min_ms": 87.32,
+        "max_ms": 129.18
+      },
+      "threads_8": {
+        "mean_ms": 123.43,
+        "p50_ms": 111.15,
+        "p95_ms": 175.53,
+        "min_ms": 88.82,
+        "max_ms": 247.76
+      }
+    }
+  }
+}

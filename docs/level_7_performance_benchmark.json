@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-10-22 01:03:49",
+  "platform": "win32",
+  "python_version": "3.11.9",
+  "cuda_available": true,
+  "gpu_name": "NVIDIA GeForce RTX 2050",
+  "ram_total_gb": 15.64,
+  "image_decoding": {
+    "mean_ms": 4.02,
+    "median_ms": 3.78,
+    "p95_ms": 5.25,
+    "min_ms": 3.43,
+    "max_ms": 6.19,
+    "n_runs": 15
+  },
+  "preprocessing": {
+    "mean_ms": 25.09,
+    "median_ms": 24.32,
+    "p95_ms": 34.17,
+    "min_ms": 18.68,
+    "max_ms": 34.57,
+    "n_runs": 15
+  },
+  "dentex_fp32_onnx": {
+    "mean_ms": 103.19,
+    "median_ms": 103.19,
+    "p95_ms": 110.67,
+    "min_ms": 96.24,
+    "max_ms": 111.24,
+    "n_runs": 15
+  },
+  "dentex_int8_onnx": {
+    "mean_ms": 124.91,
+    "median_ms": 122.36,
+    "p95_ms": 133.62,
+    "min_ms": 116.05,
+    "max_ms": 136.72,
+    "n_runs": 15
+  },
+  "liodon_screener_onnx": {
+    "mean_ms": 70.73,
+    "median_ms": 68.24,
+    "p95_ms": 85.27,
+    "min_ms": 63.86,
+    "max_ms": 87.84,
+    "n_runs": 15
+  },
+  "dentex_pytorch_gpu": {
+    "mean_ms": 39.93,
+    "median_ms": 38.54,
+    "p95_ms": 54.7,
+    "min_ms": 26.6,
+    "max_ms": 76.81,
+    "n_runs": 15
+  },
+  "gpu_vram_peak_mb": 28.57,
+  "fdi_solver": {
+    "mean_ms": 1.0,
+    "median_ms": 0.95,
+    "p95_ms": 1.46,
+    "min_ms": 0.8,
+    "max_ms": 2.19,
+    "n_runs": 30
+  },
+  "tooth_association": {
+    "mean_ms": 0.13,
+    "median_ms": 0.13,
+    "p95_ms": 0.15,
+    "min_ms": 0.12,
+    "max_ms": 0.15,
+    "n_runs": 30
+  },
+  "full_analysis_pipeline": {
+    "mean_ms": 3812.63,
+    "median_ms": 3843.65,
+    "p95_ms": 4029.3,
+    "min_ms": 3570.16,
+    "max_ms": 4075.86,
+    "n_runs": 10
+  },
+  "deterministic_draft_generation": {
+    "mean_ms": 947.41,
+    "median_ms": 927.49,
+    "p95_ms": 1077.39,
+    "min_ms": 875.76,
+    "max_ms": 1099.75,
+    "n_runs": 10
+  },
+  "ollama_qwen25_3b": {
+    "latency_ms": 9779.2,
+    "engine_used": "ollama:qwen2.5:3b",
+    "status": "available"
+  },
+  "pdf_generation": {
+    "mean_ms": 90.39,
+    "median_ms": 89.26,
+    "p95_ms": 103.83,
+    "min_ms": 72.19,
+    "max_ms": 109.84,
+    "n_runs": 10
+  },
+  "peak_ram_mb": 1544.71
+}

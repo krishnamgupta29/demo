@@ -45,7 +45,7 @@ def test_migrations_execute_cleanly():
         "confirmations",
         "insurance_drafts",
         "audit_events",
-        "schema_migrations",
+        "alembic_version",
     }
     assert expected_tables.issubset(tables), f"Missing tables: {expected_tables - tables}"
 

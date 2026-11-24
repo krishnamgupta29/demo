@@ -1,0 +1,7 @@
+Class,GroundTruth,Predictions,TP,FP,FN,Precision,Recall,F1,AP50,AP50_95
+caries,548,814,379,435,169,0.4656,0.6916,0.5565,0.4967,0.3694
+periapical_lesion,32,38,22,16,10,0.5789,0.6875,0.6286,0.5872,0.408
+impacted_tooth,109,127,101,26,8,0.7953,0.9266,0.8559,0.8447,0.5195
+alveolar_bone_loss,UNSUPPORTED,-,-,-,-,-,-,-,-,-
+root_canal_treatment,UNSUPPORTED,-,-,-,-,-,-,-,-,-
+treated_tooth_with_radiolucency,UNSUPPORTED,-,-,-,-,-,-,-,-,-

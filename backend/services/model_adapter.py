@@ -42,10 +42,12 @@ class ModelRegistryEntry:
       architecture: str,
       supported_classes: list[str],
       input_shape: tuple[int, int, int, int],  # (B, C, H, W)
-      expected_output_shapes: list[tuple],
       weight_rel_path: str,
       license_terms: str,
       source_repository: str,
+      expected_output_shapes: Optional[list[tuple]] = None,
+      blocker_reason: Optional[str] = None,
+      supported_modalities: Optional[list[str]] = None,
   ):
     self.model_id = model_id
     self.model_name = model_name
@@ -58,6 +60,8 @@ class ModelRegistryEntry:
     self.weight_rel_path = weight_rel_path
     self.license_terms = license_terms
     self.source_repository = source_repository
+    self.blocker_reason = blocker_reason
+    self.supported_modalities = supported_modalities or ["panoramic_opg"]
 
   @property
   def weight_full_path(self) -> Path:
@@ -131,7 +135,7 @@ class ModelAdapter:
 
   def run_inference(self, preprocessed_tensor: np.ndarray) -> dict[str, Any]:
     """Execute forward inference under strict availability and contract checks."""
-    if not self.entry.is_available() or self._session is None:
+    if not self.entry.is_available():
       return {
           "status": ModelAvailabilityStatus.MODEL_UNAVAILABLE.value,
           "error": (
@@ -139,6 +143,13 @@ class ModelAdapter:
               f" {self.entry.weight_rel_path}. External model download requires"
               " user authorization."
           ),
+          "provenance": self.entry.get_provenance().model_dump(),
+      }
+
+    if self._session is None and not self.load_session():
+      return {
+          "status": ModelAvailabilityStatus.ERROR.value,
+          "error": f"Failed to initialize ONNX Runtime session for {self.entry.model_id}",
           "provenance": self.entry.get_provenance().model_dump(),
       }
 
@@ -187,8 +198,8 @@ class ModelRegistry:
         architecture="Transformer-based Object Detector",
         supported_classes=[str(i) for i in range(11, 49) if (i % 10) in range(1, 9)],
         input_shape=(1, 3, 640, 640),
-        expected_output_shapes=[(1, 32, 5)],
-        weight_rel_path="models/checkpoints/dental_fdi_detection.onnx",
+        expected_output_shapes=[(1, 300, 36)],
+        weight_rel_path="models/checkpoints/dental_fdi.onnx",
         license_terms="Open Community / Educational",
         source_repository="https://huggingface.co/abychkov/dental-fdi-detection",
     )
@@ -248,8 +259,104 @@ class ModelRegistry:
         weight_rel_path="models/checkpoints/boneloss_pan769.onnx",
         license_terms="Academic Research Only",
         source_repository="https://github.com/academic-dental/BoneLoss-PAN769",
+        blocker_reason=(
+            "UNSUPPORTED_MISSING_LANDMARKS: Quantitative alveolar bone loss assessment requires reference landmarks "
+            "(cementoenamel junction, alveolar crest line, root apex). DENTEX challenge annotations provide whole-tooth "
+            "abnormal condition polygons, not crestal reference lines. Quantitative bone loss assessment is explicitly "
+            "unsupported until anatomically valid reference landmarks are available. Fabricating bone loss is prohibited."
+        ),
     )
     self.register(boneloss_candidate)
+
+    # Candidate 5: In-House DENTEX 4-Class YOLOv8n-Seg (Level 6 Validated Model)
+    dentex_seg_candidate = ModelRegistryEntry(
+        model_id="dentex-yolov8n-seg",
+        model_name="DENTEX 4-Class Abnormal-Tooth Instance Segmenter",
+        version="1.0.0",
+        task=ModelTask.PATHOLOGY_SEGMENTATION,
+        architecture="YOLOv8n-seg (4-Class Fine-Tuned Instance Segmentation)",
+        supported_classes=["impacted_tooth", "caries", "periapical_lesion", "deep_caries"],
+        input_shape=(1, 3, 640, 640),
+        expected_output_shapes=[(1, 40, 8400), (1, 32, 160, 160)],
+        weight_rel_path="models/checkpoints/dentex_yolov8n_seg.onnx",
+        license_terms="CC BY-NC 4.0",
+        source_repository="Local Fine-Tuned Checkpoint",
+    )
+    self.register(dentex_seg_candidate)
+
+    # Candidate 6: DENTEX 4-Class YOLOv8n-Seg INT8 (Level 6 Quantized Model)
+    dentex_int8_candidate = ModelRegistryEntry(
+        model_id="dentex-yolov8n-seg-int8",
+        model_name="DENTEX 4-Class Abnormal-Tooth Segmenter (INT8 Quantized)",
+        version="1.0.0",
+        task=ModelTask.PATHOLOGY_SEGMENTATION,
+        architecture="YOLOv8n-seg (Dynamic INT8 Quantized)",
+        supported_classes=["impacted_tooth", "caries", "periapical_lesion", "deep_caries"],
+        input_shape=(1, 3, 640, 640),
+        expected_output_shapes=[(1, 40, 8400), (1, 32, 160, 160)],
+        weight_rel_path="models/checkpoints/dentex_yolov8n_seg_int8.onnx",
+        license_terms="CC BY-NC 4.0",
+        source_repository="Local Fine-Tuned Checkpoint (INT8 Quantized)",
+    )
+    self.register(dentex_int8_candidate)
+
+    # Candidate 7: Nsitnov 8024 YOLOv8-Seg (Installed Checkpoint)
+    nsitnov_installed = ModelRegistryEntry(
+        model_id="nsitnov-8024-seg",
+        model_name="Nsitnov Dental Restorations & Lesions Segmenter",
+        version="1.0.0",
+        task=ModelTask.PATHOLOGY_SEGMENTATION,
+        architecture="YOLOv8-seg (Ultralytics Instance Segmentation)",
+        supported_classes=[
+            "Caries",
+            "Crown",
+            "Filling",
+            "Implant",
+            "Missing-tooth",
+            "Periapical-lesion",
+            "Root Piece",
+            "Root-Canal-Treatment",
+        ],
+        input_shape=(1, 3, 640, 640),
+        expected_output_shapes=[(1, 44, 8400), (1, 32, 160, 160)],
+        weight_rel_path="models/checkpoints/8024.onnx",
+        license_terms="Apache 2.0",
+        source_repository="https://huggingface.co/nsitnov/8024-yolov8-model",
+    )
+    self.register(nsitnov_installed)
+
+    # Candidate 8: Liodon Panoramic Screener INT8
+    liodon_int8_candidate = ModelRegistryEntry(
+        model_id="liodon-panoramic-screener-int8",
+        model_name="Liodon Panoramic Anomaly Screener (INT8 Quantized)",
+        version="1.0.0",
+        task=ModelTask.PATHOLOGY_DETECTION,
+        architecture="YOLO11n (Dynamic INT8 Quantized)",
+        supported_classes=["caries", "periapical_lesion", "impacted_tooth"],
+        input_shape=(1, 3, 640, 640),
+        expected_output_shapes=[(1, 7, 8400)],
+        weight_rel_path="models/checkpoints/best_int8.onnx",
+        license_terms="CC BY-NC 4.0",
+        source_repository="https://huggingface.co/liodon-ai/dental-panoramic-detector",
+    )
+    self.register(liodon_int8_candidate)
+
+    # Candidate 9: Dedicated IOPA Periapical Anomaly Screener
+    iopa_candidate = ModelRegistryEntry(
+        model_id="iopa-periapical-screener",
+        model_name="IOPA Periapical Anomaly Screener",
+        version="1.0.0",
+        task=ModelTask.PATHOLOGY_DETECTION,
+        architecture="YOLO11n (Pretrained Periapical Adapted)",
+        supported_classes=["caries", "periapical_lesion"],
+        input_shape=(1, 3, 640, 640),
+        expected_output_shapes=[(1, 7, 8400)],
+        weight_rel_path="models/checkpoints/best.onnx",
+        license_terms="CC BY-NC 4.0",
+        source_repository="https://huggingface.co/liodon-ai/dental-panoramic-detector",
+        supported_modalities=["intraoral_periapical"],
+    )
+    self.register(iopa_candidate)
 
   def register(self, entry: ModelRegistryEntry):
     self._entries[entry.model_id] = entry
@@ -280,6 +387,8 @@ class ModelRegistry:
           "availability_status": prov.availability_status.value,
           "license": m.license_terms,
           "source_repository": m.source_repository,
+          "blocker_reason": m.blocker_reason,
+          "supported_modalities": getattr(m, "supported_modalities", ["panoramic_opg"]),
       })
     return result
 

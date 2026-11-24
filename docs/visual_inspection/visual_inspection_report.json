@@ -1,0 +1,426 @@
+[
+  {
+    "case_id": "CASE-1",
+    "title": "Case 1: Caries Detection & Cervical Burnout Screening",
+    "image_id": 3,
+    "file_name": "train_435.png",
+    "dimensions": "2909x1316",
+    "findings": [
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.30790001153945923,
+        "bbox": [
+          753.7,
+          655.76,
+          1072.54,
+          941.91
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.30489999055862427,
+        "bbox": [
+          1824.37,
+          641.76,
+          2113.37,
+          931.07
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.29339998960494995,
+        "bbox": [
+          1949.99,
+          581.57,
+          2217.55,
+          849.88
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.290800005197525,
+        "bbox": [
+          1168.74,
+          378.04,
+          1302.31,
+          697.66
+        ],
+        "iou_with_gt": 0.0
+      }
+    ],
+    "visualization_file": "case_1_3.png"
+  },
+  {
+    "case_id": "CASE-2",
+    "title": "Case 2: Caries Detection & Cervical Burnout Screening",
+    "image_id": 7,
+    "file_name": "train_637.png",
+    "dimensions": "3076x1536",
+    "findings": [
+      {
+        "type": "TP (True Positive)",
+        "class": "caries",
+        "confidence": 0.6674000024795532,
+        "bbox": [
+          804.11,
+          510.93,
+          965.65,
+          788.13
+        ],
+        "iou_with_gt": 0.863
+      },
+      {
+        "type": "TP (True Positive)",
+        "class": "caries",
+        "confidence": 0.646399974822998,
+        "bbox": [
+          1910.33,
+          549.53,
+          2094.73,
+          776.39
+        ],
+        "iou_with_gt": 0.79
+      },
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.569100022315979,
+        "bbox": [
+          1020.62,
+          536.55,
+          1172.84,
+          852.74
+        ],
+        "iou_with_gt": 0.178
+      },
+      {
+        "type": "TP (True Positive)",
+        "class": "caries",
+        "confidence": 0.5613999962806702,
+        "bbox": [
+          1132.05,
+          545.49,
+          1232.72,
+          808.82
+        ],
+        "iou_with_gt": 0.857
+      },
+      {
+        "type": "TP (True Positive)",
+        "class": "caries",
+        "confidence": 0.5029000043869019,
+        "bbox": [
+          870.28,
+          846.74,
+          1135.06,
+          1148.54
+        ],
+        "iou_with_gt": 0.933
+      },
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.43880000710487366,
+        "bbox": [
+          903.47,
+          510.92,
+          1070.91,
+          824.19
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.3986000120639801,
+        "bbox": [
+          1820.26,
+          838.05,
+          2051.36,
+          1156.99
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.36079999804496765,
+        "bbox": [
+          757.04,
+          796.78,
+          1009.85,
+          1057.35
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FN (False Negative)",
+        "class": "caries",
+        "confidence": null,
+        "bbox": [
+          1254.0,
+          861.0,
+          1356.0,
+          1167.0
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FN (False Negative)",
+        "class": "caries",
+        "confidence": null,
+        "bbox": [
+          1682.0,
+          853.0,
+          1809.0,
+          1163.0
+        ],
+        "iou_with_gt": 0.0
+      }
+    ],
+    "visualization_file": "case_2_7.png"
+  },
+  {
+    "case_id": "CASE-3",
+    "title": "Case 3: Multi-Pathology (Impacted Tooth + Caries)",
+    "image_id": 11,
+    "file_name": "train_498.png",
+    "dimensions": "2910x1316",
+    "findings": [
+      {
+        "type": "TP (True Positive)",
+        "class": "impacted_tooth",
+        "confidence": 0.7260000109672546,
+        "bbox": [
+          739.69,
+          634.97,
+          912.83,
+          905.82
+        ],
+        "iou_with_gt": 0.827
+      },
+      {
+        "type": "TP (True Positive)",
+        "class": "impacted_tooth",
+        "confidence": 0.7150999903678894,
+        "bbox": [
+          1936.96,
+          368.15,
+          2126.16,
+          578.08
+        ],
+        "iou_with_gt": 0.746
+      },
+      {
+        "type": "TP (True Positive)",
+        "class": "caries",
+        "confidence": 0.6003000140190125,
+        "bbox": [
+          809.29,
+          666.25,
+          1062.25,
+          950.65
+        ],
+        "iou_with_gt": 0.896
+      },
+      {
+        "type": "TP (True Positive)",
+        "class": "impacted_tooth",
+        "confidence": 0.5598999857902527,
+        "bbox": [
+          873.0,
+          424.07,
+          1100.26,
+          616.19
+        ],
+        "iou_with_gt": 0.903
+      },
+      {
+        "type": "TP (True Positive)",
+        "class": "caries",
+        "confidence": 0.49889999628067017,
+        "bbox": [
+          1818.2,
+          429.06,
+          1974.78,
+          733.83
+        ],
+        "iou_with_gt": 0.917
+      },
+      {
+        "type": "TP (True Positive)",
+        "class": "caries",
+        "confidence": 0.37630000710487366,
+        "bbox": [
+          1785.46,
+          725.26,
+          2046.19,
+          1026.73
+        ],
+        "iou_with_gt": 0.914
+      },
+      {
+        "type": "TP (True Positive)",
+        "class": "caries",
+        "confidence": 0.3190000057220459,
+        "bbox": [
+          921.48,
+          726.42,
+          1183.52,
+          1030.13
+        ],
+        "iou_with_gt": 0.897
+      },
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.2639999985694885,
+        "bbox": [
+          1760.3,
+          458.52,
+          1860.48,
+          755.39
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FN (False Negative)",
+        "class": "impacted_tooth",
+        "confidence": null,
+        "bbox": [
+          2031.0,
+          647.0,
+          2188.0,
+          900.0
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FN (False Negative)",
+        "class": "caries",
+        "confidence": null,
+        "bbox": [
+          925.0,
+          443.0,
+          1147.0,
+          697.0
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FN (False Negative)",
+        "class": "caries",
+        "confidence": null,
+        "bbox": [
+          1051.0,
+          477.0,
+          1232.0,
+          742.0
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FN (False Negative)",
+        "class": "caries",
+        "confidence": null,
+        "bbox": [
+          1900.0,
+          673.0,
+          2133.0,
+          937.0
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FN (False Negative)",
+        "class": "caries",
+        "confidence": null,
+        "bbox": [
+          1203.0,
+          763.0,
+          1318.0,
+          1059.0
+        ],
+        "iou_with_gt": 0.0
+      }
+    ],
+    "visualization_file": "case_3_11.png"
+  },
+  {
+    "case_id": "CASE-4",
+    "title": "Case 4: Caries Detection & Cervical Burnout Screening",
+    "image_id": 31,
+    "file_name": "train_669.png",
+    "dimensions": "2984x1316",
+    "findings": [
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.5004000067710876,
+        "bbox": [
+          848.88,
+          755.55,
+          1092.71,
+          1009.15
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.3294999897480011,
+        "bbox": [
+          989.22,
+          781.8,
+          1206.96,
+          1060.44
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "FP (False Positive)",
+        "class": "caries",
+        "confidence": 0.26600000262260437,
+        "bbox": [
+          1000.91,
+          513.73,
+          1144.4,
+          802.6
+        ],
+        "iou_with_gt": 0.0
+      },
+      {
+        "type": "TP (True Positive)",
+        "class": "caries",
+        "confidence": 0.26159998774528503,
+        "bbox": [
+          1724.22,
+          744.15,
+          1953.3,
+          1043.41
+        ],
+        "iou_with_gt": 0.946
+      },
+      {
+        "type": "FN (False Negative)",
+        "class": "caries",
+        "confidence": null,
+        "bbox": [
+          789.65,
+          433.18,
+          998.47,
+          743.0
+        ],
+        "iou_with_gt": 0.0
+      }
+    ],
+    "visualization_file": "case_4_31.png"
+  }
+]

@@ -193,18 +193,31 @@ class StorageManager:
 
     # Sanitize DICOM patient metadata if applicable
     save_bytes = raw_bytes
+    burned_in_warning = None
     if is_dicom:
       try:
         import pydicom
         dcm_anon = pydicom.dcmread(io.BytesIO(raw_bytes), force=True)
+        # Strip vendor private tags (odd group numbers)
+        try:
+          dcm_anon.remove_private_tags()
+        except Exception:
+          pass
         phi_tags = [
             "PatientName", "PatientID", "PatientBirthDate", "PatientSex",
             "PatientAge", "PatientAddress", "InstitutionName", "ReferringPhysicianName",
-            "PhysiciansOfRecord", "PerformingPhysicianName", "OperatorName",
+            "PhysiciansOfRecord", "PerformingPhysicianName", "OperatorName", "OperatorsName",
+            "AccessionNumber", "StudyID", "OtherPatientIDs", "PatientComments",
+            "StationName", "InstitutionalDepartmentName", "DeviceSerialNumber",
         ]
         for tag in phi_tags:
           if hasattr(dcm_anon, tag):
             setattr(dcm_anon, tag, "ANONYMIZED")
+        if hasattr(dcm_anon, "BurnedInAnnotation") and str(dcm_anon.BurnedInAnnotation).upper() in ("YES", "Y"):
+          burned_in_warning = (
+              "DICOM metadata indicates potential burned-in patient annotations on pixel data. "
+              "Diagnostic pixels preserved for clinical integrity without alteration."
+          )
         buf = io.BytesIO()
         dcm_anon.save_as(buf)
         save_bytes = buf.getvalue()
@@ -259,6 +272,8 @@ class StorageManager:
           f"Low sharpness score ({blur_score:.1f}). Possible motion blur or"
           " low-contrast scan"
       )
+    if burned_in_warning:
+      warnings.append(burned_in_warning)
 
     overall_passed = resolution_ok and (aspect_ratio >= 1.20)
 
@@ -292,9 +307,9 @@ class StorageManager:
     target = (self.preview_dir / filename).resolve()
     if target.exists() and target.is_relative_to(self.preview_dir.resolve()):
       return target
-    # Fallback to PROJECT_ROOT path if exists
+    # Fallback to PROJECT_ROOT path if exists (guarded with is_relative_to)
     fallback = (settings.PROJECT_ROOT / preview_rel_path).resolve()
-    if fallback.exists():
+    if fallback.exists() and fallback.is_relative_to(settings.PROJECT_ROOT.resolve()):
       return fallback
     return None
 
@@ -305,9 +320,12 @@ class StorageManager:
     if target.exists() and target.is_relative_to(self.storage_dir.resolve()):
       return target
     fallback = (settings.PROJECT_ROOT / storage_rel_path).resolve()
-    if fallback.exists():
+    if fallback.exists() and fallback.is_relative_to(settings.PROJECT_ROOT.resolve()):
       return fallback
     return None
+
+  # Alias for backward compatibility
+  get_image_path = get_storage_path
 
   def delete_study_files(
       self, storage_rel_path: str, preview_rel_path: Optional[str] = None
