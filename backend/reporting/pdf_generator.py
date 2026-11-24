@@ -146,6 +146,27 @@ def generate_tooth_crop_bytes(
       rx1 = bx1 - cx1; ry1 = by1 - cy1
       rx2 = bx2 - cx1; ry2 = by2 - cy1
       draw = ImageDraw.Draw(crop)
+
+      # Draw polygon mask contour and semi-transparent fill if available
+      poly_pts = None
+      if hasattr(obs, "polygon") and obs.polygon and hasattr(obs.polygon, "points") and obs.polygon.points:
+        poly_pts = obs.polygon.points
+
+      if poly_pts and len(poly_pts) >= 3:
+        crop_poly = []
+        for pt in poly_pts:
+          px = pt[0] if pt[0] > 1.0 else pt[0] * W
+          py = pt[1] if pt[1] > 1.0 else pt[1] * H
+          crop_poly.append((px - cx1, py - cy1))
+        try:
+          crop_overlay = PILImage.new("RGBA", crop.size, (0, 0, 0, 0))
+          cpdraw = ImageDraw.Draw(crop_overlay)
+          cpdraw.polygon(crop_poly, fill=(border_color[0], border_color[1], border_color[2], 85), outline=border_color)
+          crop = PILImage.alpha_composite(crop.convert("RGBA"), crop_overlay).convert("RGB")
+          draw = ImageDraw.Draw(crop)
+        except Exception:
+          pass
+
       draw.rectangle([rx1, ry1, rx2, ry2], outline=border_color, width=3)
 
       # Resize to consistent display size (letterbox with black bars)
@@ -177,7 +198,9 @@ def generate_annotated_radiograph_bytes(
   try:
     with PILImage.open(base_image_path) as base_img:
       # Target clean dimensions preserving aspect ratio
-      img = base_img.convert("RGB")
+      base_conv = base_img.convert("RGB")
+      orig_w, orig_h = base_conv.size
+      img = base_conv.copy()
       img.thumbnail((800, 480))
       w, h = img.size
       draw = ImageDraw.Draw(img)
@@ -199,6 +222,28 @@ def generate_annotated_radiograph_bytes(
         else:
           box_color = (250, 204, 21)   # #facc15 (bright yellow for AI candidate)
           status_tag = "AI CANDIDATE"
+
+        # Draw polygon mask contour and semi-transparent fill if available
+        poly_pts = None
+        if hasattr(obs, "polygon") and obs.polygon and hasattr(obs.polygon, "points") and obs.polygon.points:
+          poly_pts = obs.polygon.points
+
+        if poly_pts and len(poly_pts) >= 3:
+          scaled_poly = []
+          for pt in poly_pts:
+            px = pt[0] * (w / orig_w) if pt[0] > 1.0 else pt[0] * w
+            py = pt[1] * (h / orig_h) if pt[1] > 1.0 else pt[1] * h
+            scaled_poly.append((px, py))
+          try:
+            poly_overlay = PILImage.new("RGBA", (w, h), (0, 0, 0, 0))
+            pdraw = ImageDraw.Draw(poly_overlay)
+            fill_c = (box_color[0], box_color[1], box_color[2], 75)
+            line_c = (box_color[0], box_color[1], box_color[2], 220)
+            pdraw.polygon(scaled_poly, fill=fill_c, outline=line_c)
+            img = PILImage.alpha_composite(img.convert("RGBA"), poly_overlay).convert("RGB")
+            draw = ImageDraw.Draw(img)
+          except Exception:
+            pass
 
         x_min, y_min, x_max, y_max = None, None, None, None
         if hasattr(obs, "bbox") and obs.bbox:
@@ -298,7 +343,8 @@ class DentraceNumberedCanvas(canvas.Canvas):
     self.setStrokeColor(colors.HexColor("#ded8c4"))
     self.setLineWidth(0.75)
     self.line(36, 32, 576, 32)
-    self.drawString(36, 20, "Draft for dentist review. Not a diagnosis. Not certified under FDA / CE / MDR.")
+    engine_label = getattr(self, "engine_used", "deterministic_fallback") or "deterministic_fallback"
+    self.drawString(36, 20, f"Draft for dentist review. Not a diagnosis. Engine: {engine_label}")
     self.drawRightString(576, 20, f"Page {self._pageNumber} of {num_pages}")
     self.restoreState()
 
@@ -775,12 +821,18 @@ class LocalClaimPackPDFGenerator:
         t_fdi = obs.tooth_fdi
         anat_t, quad_t = get_fdi_anatomical_name(t_fdi)
         t_label = f"<b>Tooth #{t_fdi}</b>" if t_fdi else "<b>General Arch</b>"
-        if obs.fdi_uncertain:
-          t_label += " <font color='#b91c1c'>*(Uncertain)*</font>"
+        
+        fdi_status_val = getattr(obs, "fdi_status", "ai_estimated") or "ai_estimated"
+        is_fdi_confirmed = fdi_status_val == "clinician_confirmed" or (cfm and cfm.decision.value == "confirmed") or is_manual
+        fdi_status_badge = "<font color='#16a34a'><b>[✓] Clinician-Confirmed FDI</b></font>" if is_fdi_confirmed else "<font color='#475569'><b>AI-Estimated FDI</b></font>"
+
         tooth_cell = [
             Paragraph(t_label, tbl_cell),
             Paragraph(f"{anat_t}", tbl_cell_small),
+            Paragraph(fdi_status_badge, tbl_cell_small),
         ]
+        if getattr(obs, "fdi_uncertain", False):
+          tooth_cell.append(Paragraph("<font color='#c2410c'><b>Tooth number AI-estimated, verify before submission</b></font>", tbl_cell_small))
 
         path_val = obs.pathology_candidate.value.replace("_", " ").title()
         modality_val = "Clinician Manual" if is_manual else obs.annotation_modality.value
@@ -1189,7 +1241,7 @@ class LocalClaimPackPDFGenerator:
         [
             Paragraph("Target Tooth", tbl_header),
             Paragraph("Proposed Clinical Procedure", tbl_header),
-            Paragraph("Suggested CDT Code", tbl_header),
+            Paragraph("Candidate CDT Code<br/><font size=6.5 color='#94a3b8'>(for dentist verification; academic demo mapping)</font>", tbl_header),
             Paragraph("Clinical Urgency", tbl_header),
         ]
     ]
@@ -1231,7 +1283,7 @@ class LocalClaimPackPDFGenerator:
     elements.append(Spacer(1, 3))
 
     elements.append(Paragraph(
-        "<i>CDT Licensing Notice: Current Dental Terminology (CDT) codes are presented solely as decision support suggestions under academic license. Final procedure determination and billing compliance remain the exclusive professional responsibility of the treating dentist.</i>",
+        "<i>CDT Licensing Notice: Candidate codes for dentist verification; academic demo mapping. Current Dental Terminology (CDT) codes are presented solely as decision support suggestions under academic license. Final procedure determination and billing compliance remain the exclusive professional responsibility of the treating dentist.</i>",
         caption_desc,
     ))
     elements.append(Spacer(1, 6))
@@ -1247,10 +1299,8 @@ class LocalClaimPackPDFGenerator:
         if np_text.strip():
           narrative_elements.append(Paragraph(f"<font color='#0284c7'><b>[Clinician-Attested Narrative]</b></font> {np_text.strip()}", narrative_p))
     else:
-      # Keep narrative concise so Page 4 never overflows
-      obs_summary = draft.section_5_radiographic_observations
-      if len(obs_summary) > 220:
-        obs_summary = obs_summary[:217] + "..."
+      # Keep full narrative observations visible with line breaks
+      obs_summary = draft.section_5_radiographic_observations.replace("\n", "<br/>")
       
       sections_text = [
           f"<b>Case Identification:</b> {draft.section_1_case_identification}",
@@ -1349,6 +1399,7 @@ class LocalClaimPackPDFGenerator:
       c = DentraceNumberedCanvas(*args, **kwargs)
       c.is_draft = not is_approved_export
       c.study_id = package.study_id
+      c.engine_used = getattr(draft, "generated_by", "deterministic_fallback") if draft else "deterministic_fallback"
       return c
 
     doc.build(elements, canvasmaker=canvas_factory)

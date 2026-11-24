@@ -62,6 +62,13 @@ DEMO_CDT_CATALOG: dict[str, CDTCodeMetadata] = {
         description="Direct restorative restoration involving one surface.",
         documentation_requirements=["radiographic_caries", "tooth_fdi", "surface_specified"],
     ),
+    "D2330": CDTCodeMetadata(
+        cdt_code="D2330",
+        display_name="Resin-Based Composite - One Surface, Anterior",
+        category="Restorative",
+        description="Direct composite restoration on a single anterior surface.",
+        documentation_requirements=["radiographic_caries", "tooth_fdi", "surface_specified"],
+    ),
     "D2391": CDTCodeMetadata(
         cdt_code="D2391",
         display_name="Resin-Based Composite - One Surface, Posterior",
@@ -81,6 +88,19 @@ DEMO_CDT_CATALOG: dict[str, CDTCodeMetadata] = {
         display_name="Endodontic Therapy - Molar Tooth (Excluding Final Restoration)",
         category="Endodontics",
         description="Complete root canal treatment on permanent molar tooth.",
+        documentation_requirements=[
+            "periapical_radiograph",
+            "pulp_vitality_test",
+            "percussion_sensitivity",
+            "tooth_fdi",
+            "clinician_rationale",
+        ],
+    ),
+    "D3310": CDTCodeMetadata(
+        cdt_code="D3310",
+        display_name="Endodontic Therapy - Anterior Tooth (Excluding Final Restoration)",
+        category="Endodontics",
+        description="Complete root canal treatment on permanent anterior tooth (incisor or canine).",
         documentation_requirements=[
             "periapical_radiograph",
             "pulp_vitality_test",
@@ -154,34 +174,54 @@ class CDTCodingService:
       pathology: PathologyClass,
       tooth_fdi: Optional[int] = None,
       is_deep: bool = False,
+      probing_depth_mm: Optional[float] = None,
   ) -> list[CDTCodeMetadata]:
     """Generates non-authoritative candidate codes for clinician consideration.
 
     CRITICAL RULE: Returned candidates must be flagged as unverified and suppressed
     if insufficient clinical information exists.
+    Specifically, D4341 (periodontal scaling and root planing) is NEVER suggested
+    from automated AI findings alone; it requires explicit clinician probing depth >= 4.0 mm.
     """
     candidates = []
+    pos = (tooth_fdi % 10) if tooth_fdi is not None else None
+
     if pathology in (PathologyClass.CARIES, PathologyClass.DEEP_CARIES):
-      candidates.append(DEMO_CDT_CATALOG["D2391"])
-      candidates.append(DEMO_CDT_CATALOG["D2392"])
-      if is_deep and tooth_fdi is not None:
-        # If tooth is molar (16-18, 26-28, 36-38, 46-48)
-        if tooth_fdi % 10 in (6, 7, 8):
+      if pos in (1, 2, 3):
+        candidates.append(DEMO_CDT_CATALOG["D2330"])
+      else:
+        candidates.append(DEMO_CDT_CATALOG["D2391"])
+        candidates.append(DEMO_CDT_CATALOG["D2392"])
+
+      if is_deep and pos is not None:
+        if pos in (6, 7, 8):
           candidates.append(DEMO_CDT_CATALOG["D3330"])
-        elif tooth_fdi % 10 in (4, 5):
+        elif pos in (4, 5):
           candidates.append(DEMO_CDT_CATALOG["D3320"])
+        elif pos in (1, 2, 3):
+          candidates.append(DEMO_CDT_CATALOG["D3310"])
+
     elif pathology == PathologyClass.PERIAPICAL_LESION:
-      if tooth_fdi is not None:
-        if tooth_fdi % 10 in (6, 7, 8):
+      if pos is not None:
+        if pos in (6, 7, 8):
           candidates.append(DEMO_CDT_CATALOG["D3330"])
-        elif tooth_fdi % 10 in (4, 5):
+        elif pos in (4, 5):
           candidates.append(DEMO_CDT_CATALOG["D3320"])
+        elif pos in (1, 2, 3):
+          candidates.append(DEMO_CDT_CATALOG["D3310"])
         candidates.append(DEMO_CDT_CATALOG["D7140"])
+      else:
+        candidates.append(DEMO_CDT_CATALOG["D3330"])
+        candidates.append(DEMO_CDT_CATALOG["D7140"])
+
     elif pathology == PathologyClass.IMPACTED_TOOTH:
       candidates.append(DEMO_CDT_CATALOG["D7230"])
       candidates.append(DEMO_CDT_CATALOG["D7240"])
+
     elif pathology == PathologyClass.ALVEOLAR_BONE_LOSS:
-      candidates.append(DEMO_CDT_CATALOG["D4341"])
+      # D4341 requires objective chairside periodontal probing depth >= 4.0 mm
+      if probing_depth_mm is not None and probing_depth_mm >= 4.0:
+        candidates.append(DEMO_CDT_CATALOG["D4341"])
 
     return candidates
 
@@ -198,17 +238,29 @@ class CDTCodingService:
       return False, f"CDT code '{cdt_code}' is not in the recognized demonstrative academic catalog."
 
     proc_lower = proposed_procedure.lower()
+    pos = (tooth_fdi % 10) if tooth_fdi is not None else None
 
-    # Molar vs premolar check for endodontics
-    if cdt_code == "D3330" and tooth_fdi is not None:
-      pos = tooth_fdi % 10
+    # Anterior vs premolar vs molar checks for endodontics
+    if cdt_code == "D3330" and pos is not None:
       if pos not in (6, 7, 8):
         return False, f"Code D3330 is specific to molar teeth (positions 6-8), but target tooth FDI is {tooth_fdi}."
 
-    if cdt_code == "D3320" and tooth_fdi is not None:
-      pos = tooth_fdi % 10
+    if cdt_code == "D3320" and pos is not None:
       if pos not in (4, 5):
         return False, f"Code D3320 is specific to premolar teeth (positions 4-5), but target tooth FDI is {tooth_fdi}."
+
+    if cdt_code == "D3310" and pos is not None:
+      if pos not in (1, 2, 3):
+        return False, f"Code D3310 is specific to anterior teeth (positions 1-3), but target tooth FDI is {tooth_fdi}."
+
+    # Anterior vs posterior restorations
+    if cdt_code == "D2330" and pos is not None:
+      if pos not in (1, 2, 3):
+        return False, f"Code D2330 is specific to anterior teeth (positions 1-3), but target tooth FDI is {tooth_fdi}."
+
+    if cdt_code in ("D2391", "D2392", "D2140") and pos is not None:
+      if pos in (1, 2, 3):
+        return False, f"Code {cdt_code} is specific to posterior teeth (positions 4-8), but target tooth FDI is {tooth_fdi}."
 
     # Surgical extraction vs simple extraction
     if cdt_code in ("D7230", "D7240") and "impact" not in proc_lower and "surgical" not in proc_lower:

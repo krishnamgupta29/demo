@@ -443,7 +443,7 @@ class StudyService:
     elif persisted_modality == "intraoral_periapical":
       target_model = "iopa-periapical-screener"
     else:
-      target_model = "liodon-panoramic-screener"
+      target_model = "dentex-yolov8n-seg"
 
     # 1. Truthful handling of unsupported capabilities (Bone loss missing reference landmarks)
     if target_model == "boneloss-pan769-baseline":
@@ -561,10 +561,15 @@ class StudyService:
     is_segmentation_model = False
 
     if target_model in ("dentex-yolov8n-seg", "dentex-yolov8n-seg-int8"):
-      # DENTEX 4-Class instance segmenter
+      # DENTEX 4-Class instance segmenter (Primary)
       ckpt_rel = reg_entry.weight_rel_path
-      if target_model == "dentex-yolov8n-seg" and (settings.PROJECT_ROOT / "models/checkpoints/dentex_yolov8n_seg.pt").exists():
-        ckpt_rel = "models/checkpoints/dentex_yolov8n_seg.pt"
+      if target_model in ("dentex-yolov8n-seg", "dentex-yolov8n-seg-int8"):
+        if (settings.PROJECT_ROOT / "models/checkpoints/dentex_yolov8n_seg_static_qdq_int8.onnx").exists():
+          ckpt_rel = "models/checkpoints/dentex_yolov8n_seg_static_qdq_int8.onnx"
+        elif (settings.PROJECT_ROOT / "models/checkpoints/dentex_yolov8n_seg_best.onnx").exists():
+          ckpt_rel = "models/checkpoints/dentex_yolov8n_seg_best.onnx"
+        elif (settings.PROJECT_ROOT / "models/checkpoints/dentex_yolov8n_seg.pt").exists():
+          ckpt_rel = "models/checkpoints/dentex_yolov8n_seg.pt"
 
       seg_engine = DentalSegmentationEngine(
           model_id=target_model,
@@ -577,6 +582,61 @@ class StudyService:
       )
       infer_result = seg_engine.predict_image(img, conf_threshold=conf_threshold, iou_threshold=iou_threshold)
       is_segmentation_model = True
+
+      # Keep liodon-panoramic-screener as secondary detector and merge
+      liodon_ckpt = "models/checkpoints/best.onnx"
+      if (settings.PROJECT_ROOT / liodon_ckpt).exists() and infer_result.get("status") == ModelAvailabilityStatus.AVAILABLE.value:
+        try:
+          liodon_engine = ONNXInferenceEngine(
+              model_id="liodon-panoramic-screener",
+              model_name="Liodon Panoramic Anomaly Screener",
+              version="1.0.0",
+              checkpoint_rel_path=liodon_ckpt,
+              class_names=["caries", "periapical_lesion", "impacted_tooth"],
+              conf_threshold=conf_threshold,
+              iou_threshold=iou_threshold,
+          )
+          liodon_result = liodon_engine.predict_image(img, conf_threshold=conf_threshold, iou_threshold=iou_threshold)
+          if liodon_result.get("status") == ModelAvailabilityStatus.AVAILABLE.value:
+            seg_dets = infer_result.get("findings", [])
+            liodon_dets = liodon_result.get("findings", [])
+
+            def _box_iou(b1, b2):
+              ix1, iy1 = max(b1[0], b2[0]), max(b1[1], b2[1])
+              ix2, iy2 = min(b1[2], b2[2]), min(b1[3], b2[3])
+              iw, ih = max(0.0, ix2 - ix1), max(0.0, iy2 - iy1)
+              inter = iw * ih
+              if inter <= 0.0:
+                return 0.0
+              a1 = max(0.0, b1[2] - b1[0]) * max(0.0, b1[3] - b1[1])
+              a2 = max(0.0, b2[2] - b2[0]) * max(0.0, b2[3] - b2[1])
+              union = a1 + a2 - inter
+              return inter / union if union > 0.0 else 0.0
+
+            def _classes_match(c_liodon, c_seg):
+              c1 = str(c_liodon).lower().replace("-", "_")
+              c2 = str(c_seg).lower().replace("-", "_")
+              if c1 == c2:
+                return True
+              if c1 == "caries" and c2 in ("caries", "deep_caries"):
+                return True
+              return False
+
+            merged = list(seg_dets)
+            for ld in liodon_dets:
+              matched = False
+              for sd in seg_dets:
+                if _classes_match(ld.class_name, sd.class_name) and _box_iou(ld.bbox_orig, sd.bbox_orig) > 0.5:
+                  matched = True
+                  break
+              if not matched:
+                # Keep liodon-only detections as box-only (has_mask=False)
+                ld.has_mask = False
+                ld.mask_polygon = None
+                merged.append(ld)
+            infer_result["findings"] = merged
+        except Exception as merge_err:
+          print(f"[study_service] Note: secondary liodon merge skipped: {merge_err}")
 
     elif target_model in ("nsitnov-8024-seg", "nsitnov-dental-segmentation"):
       ckpt_rel = reg_entry.weight_rel_path
@@ -667,10 +727,13 @@ class StudyService:
     for det in raw_detections:
       finding_id = f"FND-{uuid.uuid4().hex[:8].upper()}"
       raw_cls = getattr(det, "class_name", "caries")
+      has_poly = getattr(det, "has_mask", False) and getattr(det, "mask_polygon", None) is not None
 
-      if is_segmentation_model:
+      if has_poly:
+        pathology_enum = dentex_class_map.get(raw_cls, PathologyClass.CARIES)
+      elif is_segmentation_model:
         if target_model.startswith("dentex"):
-          pathology_enum = dentex_class_map.get(raw_cls, PathologyClass.CARIES)
+          pathology_enum = dentex_class_map.get(raw_cls, screener_class_map.get(raw_cls, PathologyClass.CARIES))
         else:
           pathology_enum = nsitnov_class_map.get(raw_cls, PathologyClass.CARIES)
       else:
@@ -680,7 +743,6 @@ class StudyService:
       bbox = FindingBoundingBox(x_min=ox1, y_min=oy1, x_max=ox2, y_max=oy2)
 
       # Modality and geometry: distinguish true polygon instance segmentation from bounding box
-      has_poly = getattr(det, "has_mask", False) and getattr(det, "mask_polygon", None) is not None
       if has_poly:
         polygon = FindingPolygon(points=det.mask_polygon)
         modality = AnnotationModality.INSTANCE_SEGMENTATION
@@ -728,6 +790,7 @@ class StudyService:
           urgency=urgency,
           bbox=bbox,
           polygon=polygon,
+          has_mask=has_poly,
           evidence=evidence,
           suggested_procedure=None,
           demo_cdt_code=None,
@@ -806,9 +869,20 @@ class StudyService:
       for idx, (f, assoc) in enumerate(zip(findings, associations)):
         if assoc.associated_fdi_number:
           f.tooth_fdi = assoc.associated_fdi_number
+          f.fdi_status = "ai_estimated"
+          if (
+              assoc.uncertain_association
+              or getattr(assoc, "uncertain_tooth", False)
+              or (assoc.confidence and assoc.confidence < 0.50)
+          ):
+            f.fdi_uncertain = True
+            f.evidence.observed_features.append("Tooth number AI-estimated, verify before submission")
+          else:
+            f.fdi_uncertain = False
+
           if assoc.is_interproximal and assoc.secondary_fdi_number:
             f.evidence.observed_features.append(f"Interproximal contact with FDI #{assoc.secondary_fdi_number}")
-          if assoc.uncertain_association:
+          if assoc.uncertain_association and "Uncertain tooth association (borderline overlap)" not in f.evidence.observed_features:
             f.evidence.observed_features.append("Uncertain tooth association (borderline overlap)")
 
           old_rec = finding_db_records[idx]
@@ -816,7 +890,13 @@ class StudyService:
           old_rec[10] = json.dumps({
               "observed_features": f.evidence.observed_features,
               "radiographic_density": f.evidence.radiographic_density,
+              "fdi_uncertain": f.fdi_uncertain,
+              "fdi_status": f.fdi_status,
           })
+        else:
+          f.fdi_uncertain = True
+          f.fdi_status = "ai_estimated"
+          f.evidence.observed_features.append("Tooth number AI-estimated, verify before submission")
 
       # Composite endodontic check: if a tooth has both root canal obturation and a periapical lesion,
       # flag suspected persistent/recurrent apical periodontitis requiring chairside confirmation

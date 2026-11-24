@@ -44,17 +44,18 @@ class MissingEvidenceDetective:
       ]
 
       if not matching_cfms:
+        readable_path = obs.pathology_candidate.value.replace("_", " ")
         missing.append(
             MissingEvidenceItem(
                 item_id=f"MISS-CFM-{uuid.uuid4().hex[:8].upper()}",
                 target_field="dentist_finding_review",
                 target_tooth_fdi=fdi,
                 clinical_reason=(
-                    f"AI observation of suspected {obs.pathology_candidate.value} requires "
+                    f"AI observation of suspected {readable_path} requires "
                     "licensed dentist clinical review and verification."
                 ),
                 question_prompt=(
-                    f"Please review suspected {obs.pathology_candidate.value} "
+                    f"Please review suspected {readable_path} "
                     f"associated with tooth {fdi if fdi else 'unspecified'} and confirm, modify, or reject."
                 ),
                 severity="REQUIRED",

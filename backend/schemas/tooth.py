@@ -39,6 +39,23 @@ VALID_FDI_TEETH = {
     48,  # Lower Right
 }
 
+# Complete horizontal flip swap mapping across the vertical facial midline
+FDI_HORIZONTAL_FLIP_MAP: dict[int, int] = {
+    # Maxilla: Q1 (Upper Right) <-> Q2 (Upper Left)
+    11: 21, 12: 22, 13: 23, 14: 24, 15: 25, 16: 26, 17: 27, 18: 28,
+    21: 11, 22: 12, 23: 13, 24: 14, 25: 15, 26: 16, 27: 17, 28: 18,
+    # Mandible: Q4 (Lower Right) <-> Q3 (Lower Left)
+    41: 31, 42: 32, 43: 33, 44: 34, 45: 35, 46: 36, 47: 37, 48: 38,
+    31: 41, 32: 42, 33: 43, 34: 44, 35: 45, 36: 46, 37: 47, 38: 48,
+}
+
+
+def swap_fdi_horizontal_flip(fdi_number: Optional[int]) -> Optional[int]:
+  """Swaps FDI tooth number across the vertical facial midline under horizontal flip augmentation."""
+  if fdi_number is None:
+    return None
+  return FDI_HORIZONTAL_FLIP_MAP.get(fdi_number, fdi_number)
+
 
 class ToothBox(ClinicalBaseModel):
   """Bounding box localization of a single permanent tooth in FDI notation."""

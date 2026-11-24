@@ -18,8 +18,14 @@ from fastapi.testclient import TestClient
 
 # Ensure legacy archived frontend modules remain discoverable for legacy integration test suites
 LEGACY_FRONTEND_DIR = Path(__file__).resolve().parents[1] / "archive" / "legacy_streamlit_frontend"
-if LEGACY_FRONTEND_DIR.exists() and str(LEGACY_FRONTEND_DIR.parent) not in sys.path:
-  sys.path.insert(0, str(LEGACY_FRONTEND_DIR.parent))
+if LEGACY_FRONTEND_DIR.exists():
+  import importlib.util
+  spec = importlib.util.spec_from_file_location("frontend", str(LEGACY_FRONTEND_DIR / "__init__.py"))
+  if spec and spec.loader:
+    mod = importlib.util.module_from_spec(spec)
+    mod.__path__ = [str(LEGACY_FRONTEND_DIR)]
+    sys.modules["frontend"] = mod
+    spec.loader.exec_module(mod)
 
 from backend.config import settings
 from backend.database.connection import get_connection

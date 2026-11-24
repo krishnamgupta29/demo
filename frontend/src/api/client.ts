@@ -157,12 +157,18 @@ export const api = {
     percussion_sensitivity?: boolean;
     palpation_sensitivity?: boolean;
     pocket_depth_mm?: number;
+    probing_depth_mm?: number;
     clinical_notes?: string;
-  }) =>
-    request<any>(`/clinical/studies/${studyId}/examination`, {
+  }) => {
+    const payload = {
+      ...data,
+      probing_depth_mm: data.probing_depth_mm ?? data.pocket_depth_mm,
+    };
+    return request<any>(`/clinical/studies/${studyId}/examination`, {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
+      body: JSON.stringify(payload),
+    });
+  },
 
   recordSymptom: (studyId: string, data: {
     symptom_description: string;

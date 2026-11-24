@@ -11,14 +11,14 @@ DENTRACE is a local-first, privacy-preserving dental imaging analysis and clinic
 
 ### Core College Problem Statement Outcomes (Compulsory):
 1. Accepts panoramic dental X-rays (OPGs) locally with zero cloud leakage.
-2. Detects anomalies: dental caries, periapical lesions, impacted teeth, alveolar bone loss, and root canal failures.
+2. Detects anomalies: caries, deep caries, periapical lesions, impacted teeth. Root canal is supported as **"Partly: rule-based suspected-failure flag; RCT detector not in default flow; accuracy not measured"**. Alveolar bone loss is **"Not automatically detected"** (requires clinician-entered chairside probing depth).
 3. Multi-pathology instance segmentation with documented detection-only fallbacks for classes without true pixel masks. Never pretends bounding boxes are true segmentation masks.
 4. Identifies individual teeth and maps anomalies to accurate FDI identifiers (11–48).
 5. Lightweight YOLOv8-Segmentation / MobileNetV3-U-Net trained/fine-tuned with PyTorch.
 6. ONNX Runtime export with INT8 quantization benchmarking CPU inference against the sub-50ms target without preemptive claims.
 7. Local quantized SLM (Qwen2.5-3B-Instruct / Phi-3-Mini) through local Ollama (`localhost:11434`).
 8. Structured, editable, evidence-grounded insurance pre-authorization clinical narratives with legally usable ADA CDT references.
-9. FastAPI backend service and Streamlit clinical UI.
+9. FastAPI backend service and React Vite modern clinical studio UI.
 10. Color-coded findings overlays (Okabe-Ito palette), interactive odontogram, and PDF claim pack generator.
 11. Local-only execution with zero external API calls or patient telemetry.
 12. Clinician-in-the-loop requirement, explicitly disclaiming autonomous diagnosis.
@@ -37,7 +37,51 @@ DENTRACE is a local-first, privacy-preserving dental imaging analysis and clinic
 
 ---
 
-## 3. Project Directory Layout
+## 3. Fresh Clone Setup & Model Checkpoints
+
+Binary model checkpoints (`*.onnx`) are gitignored to maintain a repository footprint under 5 MB.
+
+### Setup Steps for a Fresh Clone:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/dentrace/dentrace.git
+   cd dentrace
+   ```
+2. **Install Python dependencies (Python 3.11.9):**
+   ```bash
+   py -3.11 -m venv .venv
+   .venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+3. **Install Pre-Packaged Release Models:**
+   Download or copy `dentrace_models_default_v1.0.zip` (61.74 MB) and unpack into the project root:
+   ```powershell
+   Expand-Archive -Path "C:\release\dentrace_models_default_v1.0.zip" -DestinationPath "." -Force
+   .venv\Scripts\python.exe scripts/verify_fresh_clone_with_zip.py
+   ```
+   *Unpacks default production weights into `models/checkpoints/`:*
+   - `models/checkpoints/dentex_yolov8n_seg_static_qdq_int8.onnx` (6.89 MB, Primary Segmenter)
+   - `models/checkpoints/dentex_yolov8n_seg_best.onnx` (13.16 MB, FP32 Fallback)
+   - `models/checkpoints/dentex_fdi_yolov8s_best.onnx` (42.92 MB, 32-Tooth FDI Detector)
+   - `models/checkpoints/best.onnx` (10.11 MB, Secondary Screener)
+   *(See [docs/MODELS.md](file:///D:/mini/docs/MODELS.md) for full SHA-256 checksums and optional RCT model).*
+4. **Setup Local Ollama:**
+   ```bash
+   ollama pull qwen2.5:3b
+   ollama serve
+   ```
+5. **Run Test Suite:**
+   ```bash
+   pytest tests/ -q
+   ```
+6. **Launch Application:**
+   ```bash
+   .\launch_dentrace.bat
+   ```
+
+---
+
+## 4. Project Directory Layout
 ```
 d:/mini
 ├── backend/                  # FastAPI service, rule engine, schemas, pipeline
@@ -59,24 +103,53 @@ d:/mini
 
 ---
 
-## 4. Phase Status Summary: ALL LEVELS COMPLETE — SUBMISSION READY
+## 4. Empirical Evaluation & Measured Performance Metrics
 
-- **Levels 1–5 (Foundations & Clinical UI)**: Datasets, baselines, segmentation, deterministic clinical rules, local Ollama narrative synthesis, interactive canvas viewer, and permanent 32-tooth odontogram.
-- **Level 6 & 6.1 (Model Optimization & Repairs)**: Converged YOLOv8n-Seg (0.446 Mask mAP50), calibrated FDI solver (76.07% accuracy), ONNX FP32 production inference (113 ms), endodontic safety semantics, and landmark-absent bone loss blocking.
-- **Level 7 (End-to-End Integration)**: Full pipeline orchestration across DICOM intake, multi-model execution, FDI tooth enumeration, deterministic evidence extraction, Ollama pre-auth drafting, and ReportLab PDF claim export.
-- **Level 8 (System Hardening & Security)**: Defense-in-depth across API boundaries (headers, restricted CORS), DICOM privacy sanitization, SQLite WAL mode with zero-lock transactions, rate limiting, and regulatory disclaimers.
-- **Level 9 (Desktop Packaging & Release Validation)**: Native Windows desktop deployment:
-  * **Supervisor Process Launcher**: Single-instance mutex lock (`.dentrace.lock`), 5 preflight health checks (ports 8000/8501, DB migration, SHA-256 weight integrity, CUDA/Ollama detection), zero-orphan child termination (`taskkill /F /T /PID`).
-  * **Local Security**: Ephemeral 256-bit token (`X-DENTRACE-TOKEN`) required for mutative API calls.
-  * **Deep DICOM Privacy**: 18 standard PHI tags scrubbed + vendor private tags purged + non-destructive burned-in text detection.
-  * **User Data Isolation**: Separates immutable code from user data (`%LOCALAPPDATA%\DENTRACE\data`).
-  * **Release Deliverables**: Automated packaging producing `dist/DENTRACE-v0.1.0-win64.zip` (446.59 MB), `dist/SHA256SUMS.txt`, and Inno Setup installer script (`scripts/installer/dentrace_setup.iss`).
-  * **QA Validation**: **155 / 155 automated tests passing (100% pass rate)**.
-- **Level 10 (Final System Validation & College Submission Readiness)**: Compulsory requirements audit (96.0% compliance across 25 PS outcomes), scientific model benchmark audit, clinical AI safety governance audit, Windows release validation audit, 6:30-minute faculty demonstration script, and master Final Report (`docs/LEVEL_10_FINAL_REPORT.md`).
+> **AUTHORITATIVE SOURCE OF TRUTH:**  
+> Detailed per-class metrics, confusion matrices, latency distributions, and exact reproduction commands are maintained in [docs/RESULTS.md](file:///D:/mini/docs/RESULTS.md).
+
+All metrics reported below represent **reproducible, measured numbers** on the actual physical host machine (Windows 11, Intel Core i5-13420H CPU, NVIDIA GeForce RTX 2050 4 GB VRAM) on the held-out validation splits:
+
+### A. Production Segmentation Model (Static QDQ INT8 vs FP32 Baseline)
+- **Evaluation Split:** Held-out DENTEX 2023 Validation Split (141 images, 705 pathology instances)
+- **Active Primary Segmenter:** dentex_yolov8n_seg_static_qdq_int8.onnx (Static QDQ INT8 with excluded seg head)
+- **Mask mAP50:** **0.4253** (only -0.0033 drop vs FP32 baseline of 0.4286; passes $\le 0.03$ gate)
+- **CPU Median Latency:** **35.99 ms** (passes $< 50\text{ ms}$ gate; 35.1% faster than FP32 at 55.48 ms)
+- **Model Checkpoint Size:** **6.89 MB** (47.6% footprint reduction vs 13.16 MB FP32)
+
+### B. End-to-End FDI Tooth Localization & Numbering (`dentex_fdi_yolov8s_best.onnx`)
+- **Evaluation Split:** Held-out DENTEX quadrant_enumeration Test Split (96 images, 2,729 ground-truth teeth; fixed 70/15/15 split, seed 42)
+- **Detection Recall (IoU $\ge$ 0.4):** **99.56%** (2,717 / 2,729 teeth) [Baseline: 91.39%]
+- **End-to-End Exact FDI Accuracy:** **94.87%** (2,589 / 2,729 teeth) [Baseline: 59.11%]
+- **Exact FDI Accuracy on Matched Proposals:** **95.29%** (2,589 / 2,717 teeth)
+- **Quadrant Accuracy:** **99.74%** | **Position Accuracy:** **95.55%**
+
+### C. Local Ollama Narrative Generation (`qwen2.5:3b`, Split Generation & Faithfulness Gate)
+- **Automatic Faithfulness & Completeness Verification:** Evaluated across 50 distinct test scenarios with an automated `FaithfulnessChecker`.
+- **First-Attempt Pass Rate:** **43 / 50 (86.0%)** verified faithful and complete on first attempt.
+- **Deterministic Fallbacks:** **7 / 50 (14.0%)** safely routed to the deterministic clinical generator when the SLM omitted findings in complex multi-pathology cases; **0 / 50** undetected hallucinations or unhedged phrases reached output.
+- **Completeness Rate:** **100.0%** (50 / 50 cases covered all clinical findings in final output; unaddressed findings explicitly surfaced).
+- **Clinic-Laptop CPU Latency (50 runs):** Mean **25.88 s** | Median **25.95 s** | p95 **33.76 s**.
+
+### D. End-to-End Pipeline Latency (10 Real OPGs, CPU-Only)
+- **Mean Pipeline Latency:** **4,529.14 ms** (4.53 s)
+- **Median Pipeline Latency:** **4,488.56 ms** (4.49 s)
+- **p95 Pipeline Latency:** **4,689.12 ms** (4.69 s)
+- **Stage Breakdown:** Preprocess (~120 ms) | Detection (~1,550 ms) | FDI Localization & Deduplication (~2,780 ms) | Overlay (~30 ms)
 
 ---
 
-## 5. Quickstart & Deployment Instructions
+## 5. Known Limitations & Clinical Safety Boundaries
+
+1. **Alveolar Bone Loss:** Status: **"Not automatically detected"**. Quantitative bone loss assessment is unsupported directly from 2D panoramic radiographs due to absence of CEJ and alveolar crest ground truth. Fabricated bone resorption measurements are strictly forbidden. CDT code `D4341` is strictly suppressed unless chairside periodontal probing depth $\ge 4.0\text{ mm}$ is manually recorded.
+2. **Root Canal Treatment & Endodontic Failure:** Status: **"Partly: rule-based suspected-failure flag; RCT detector not in default flow; accuracy not measured"**. A composite suspected failure is flagged deterministically when an obturated root canal co-occurs with an apical radiolucency. The secondary RCT model (`8024.onnx`) is omitted from the default flow due to CPU latency (+4.9s added).
+3. **Third-Party Model Licensing:** Checkpoints from external open challenges (`DENTEX 2023`, `liodon`) are licensed under **CC BY-NC 4.0** (strictly non-commercial, academic research). Public commercial distribution is prohibited.
+4. **DENTEX-Only Training Boundary:** The primary segmentation model is trained exclusively on the DENTEX Challenge 2023 panoramic dataset. Image contrast variations from different sensor manufacturers, pediatric mixed dentition, and heavy metallic restorations require chairside clinician review.
+5. **Regulatory Boundary:** DENTRACE is an academic decision-support tool, **not a certified medical device (FDA / CE / MDR)**. It generates drafts for dentist review and never makes autonomous clinical diagnoses or automated insurance pre-authorizations.
+
+---
+
+## 6. Quickstart & Deployment Instructions
 
 ### One-Click Windows Desktop Launch (Production / User Mode)
 Simply double-click the Windows batch launcher in the application root:
@@ -87,18 +160,18 @@ Or execute via PowerShell:
 ```powershell
 .\launch_dentrace.ps1
 ```
-The launcher performs automated preflight checks, spawns the supervised background services, injects the ephemeral security token, and automatically opens your default browser to `http://127.0.0.1:8501`.
+The launcher performs automated preflight checks, spawns the supervised FastAPI backend and modern React Vite clinical studio, and automatically opens your default browser to `http://localhost:5173`.
 
 ### Running Automated Test Suite
 From the project root:
 ```powershell
-.\.venv\Scripts\python.exe -m pytest tests/ -v
+.\.venv\Scripts\python.exe -m pytest tests/ -q
 ```
-*(All 155 tests pass in ~3.5 minutes)*
+**Current Test Suite Status:** **223 passed, 2 warnings in 216.17s (100% pass rate)**.
 
 ### Workstation URLs:
-- **DENTRACE Clinical Workstation UI:** `http://127.0.0.1:8501`
+- **DENTRACE Clinical Studio UI:** `http://localhost:5173`
 - **FastAPI Core Backend Swagger UI:** `http://127.0.0.1:8000/docs`
 - **Health Check:** `http://127.0.0.1:8000/api/v1/health`
 
-> **CURRENT STATUS: LEVEL 10 COMPLETE — ALL 155 TESTS PASSING (100%) — COLLEGE SUBMISSION READY.**
+> **CURRENT STATUS: LEVEL 10 COMPLETE — ALL 223 TESTS PASSING (100%) — COLLEGE SUBMISSION READY.**

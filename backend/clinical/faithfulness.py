@@ -64,6 +64,12 @@ class FaithfulnessChecker:
       "suggestive of", "indicative of", "pending clinician review", "screening observation"
   ]
 
+  ALLOWED_BRACKET_TAGS = {"MISSING_EVIDENCE", "PENDING CLINICIAN REVIEW"}
+  RAW_ENUM_PATTERN = re.compile(
+      r"\b(impacted_tooth|deep_caries|periapical_lesion|alveolar_bone_loss|root_canal_treatment|treated_tooth_with_radiolucency)\b|PathologyClass\.\w+",
+      re.IGNORECASE
+  )
+
   @classmethod
   def extract_teeth_mentioned(cls, text: str) -> set[int]:
     """Finds all valid two-digit FDI tooth numbers mentioned in text, avoiding timestamps and ranges."""
@@ -97,6 +103,49 @@ class FaithfulnessChecker:
     """Evaluates whether an individual statement is faithful to the evidence package."""
     issues = []
     text = statement.sentence_text.lower()
+
+    # 0a. Reject square-bracket placeholders (e.g. "[coordinates and observations]"),
+    # except allowed tags [MISSING_EVIDENCE] and [PENDING CLINICIAN REVIEW].
+    if statement.section_index in (5, 7) or statement.section_index is None:
+      bracket_matches = re.findall(r"\[([^\]]+)\]", statement.sentence_text)
+      for bm in bracket_matches:
+        bm_clean = bm.strip()
+        if bm_clean in cls.ALLOWED_BRACKET_TAGS:
+          continue
+        if re.match(r"^[\d\.\s,]+$", bm_clean):
+          continue
+        issues.append(f"Statement contains ungrounded square-bracket placeholder or unapproved tag: '[{bm_clean}]'")
+
+      # 0b. Reject raw programming enum names in prose (e.g. impacted_tooth, deep_caries, periapical_lesion)
+      enum_match = cls.RAW_ENUM_PATTERN.search(statement.sentence_text)
+      if enum_match:
+        issues.append(f"Statement contains raw programming enum name '{enum_match.group(0)}' instead of human-readable clinical prose.")
+
+      # 0c. Reject duplicated sentences within the statement
+      sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", statement.sentence_text) if s.strip()]
+      seen_sentences = set()
+      for s in sentences:
+        s_clean = re.sub(r"[^\w\s]", "", s.lower()).strip()
+        if len(s_clean) > 15:
+          if s_clean in seen_sentences:
+            issues.append(f"Statement contains duplicated sentence: '{s}'")
+            break
+          seen_sentences.add(s_clean)
+
+      # 0d. Reject unhedged wording "clinical intervention is indicated"
+      if "clinical intervention is indicated" in text:
+        issues.append("Statement contains unhedged phrase 'Clinical intervention is indicated'; must use hedged wording 'Clinical evaluation and treatment planning is recommended, pending clinician confirmation of this AI-assisted finding.'")
+
+      # 0e. Reject forbidden clinical pairings
+      has_lesion_term = any(k in text for k in ["periapical lesion", "apical radiolucency", "apical periodontitis", "periapical pathology"])
+      has_restoration_term = any(k in text for k in ["restoration", "restorative", "restore function", "restoring function"])
+      has_endo_term = any(k in text for k in ["endodontic", "root canal", "apicoectomy", "extraction", "vitality", "pulp"])
+      if has_lesion_term and has_restoration_term and not has_endo_term:
+        issues.append("Forbidden clinical pairing: 'periapical lesion' cannot be paired with simple 'restoration'; endodontic evaluation is required.")
+
+      has_impacted_term = any(k in text for k in ["impacted", "impaction", "unerupted"])
+      if has_impacted_term and any(k in text for k in ["restore function", "restoring function", "restorative"]):
+        issues.append("Forbidden clinical pairing: 'impacted tooth' cannot be paired with 'restore function'; surgical extraction evaluation or monitoring is required.")
 
     # 1. Check cited evidence IDs exist in package
     valid_evidence_ids = {package.package_id}
@@ -158,6 +207,56 @@ class FaithfulnessChecker:
               issues.append(f"Statement claims ungrounded pathology '{p_class.value}' not present in clinical findings.")
             break
 
+      # 4. Check jaw and side grounding against evidence package
+      valid_jaws = set()
+      valid_sides = set()
+      valid_bboxes = []
+
+      for obs in package.ai_observations:
+        if obs.tooth_fdi:
+          q = obs.tooth_fdi // 10
+          valid_jaws.add("maxilla" if q in (1, 2) else "mandible")
+          valid_sides.add("right" if q in (1, 4) else "left")
+        if obs.bbox:
+          bx1 = obs.bbox.x_min if obs.bbox.x_min <= 1.0 else obs.bbox.x_min / 2872.0
+          by1 = obs.bbox.y_min if obs.bbox.y_min <= 1.0 else obs.bbox.y_min / 1504.0
+          bx2 = obs.bbox.x_max if obs.bbox.x_max <= 1.0 else obs.bbox.x_max / 2872.0
+          by2 = obs.bbox.y_max if obs.bbox.y_max <= 1.0 else obs.bbox.y_max / 1504.0
+          valid_bboxes.append((round(bx1, 3), round(by1, 3), round(bx2, 3), round(by2, 3)))
+
+      for cfm in package.dentist_confirmations:
+        if cfm.confirmed_fdi:
+          q = cfm.confirmed_fdi // 10
+          valid_jaws.add("maxilla" if q in (1, 2) else "mandible")
+          valid_sides.add("right" if q in (1, 4) else "left")
+
+      # Fail if ungrounded jaw is claimed
+      if any(w in text for w in ("maxilla", "maxillary")) and "maxilla" not in valid_jaws:
+        issues.append("Statement claims jaw 'maxilla' not present in clinical evidence findings.")
+      if any(w in text for w in ("mandible", "mandibular")) and "mandible" not in valid_jaws:
+        issues.append("Statement claims jaw 'mandible' not present in clinical evidence findings.")
+
+      # Fail if ungrounded dental side is claimed
+      if re.search(r"\b(right\s+(?:quadrant|side|arch|molar|premolar|canine|incisor))\b", text) and "right" not in valid_sides:
+        issues.append("Statement claims side 'right' not present in clinical evidence findings.")
+      if re.search(r"\b(left\s+(?:quadrant|side|arch|molar|premolar|canine|incisor))\b", text) and "left" not in valid_sides:
+        issues.append("Statement claims side 'left' not present in clinical evidence findings.")
+
+      # 5. Check coordinate grounding (fail if ungrounded / invented bbox coordinates are cited)
+      coord_matches = re.findall(r"\[\s*([0-9\.]+)\s*,\s*([0-9\.]+)\s*,\s*([0-9\.]+)\s*,\s*([0-9\.]+)\s*\]", text)
+      for cm in coord_matches:
+        try:
+          c = tuple(round(float(v), 3) for v in cm)
+          matched_box = False
+          for vb in valid_bboxes:
+            if all(abs(c[i] - vb[i]) <= 0.05 for i in range(4)):
+              matched_box = True
+              break
+          if not matched_box:
+            issues.append(f"Statement cites ungrounded/invented coordinates {list(c)} not present in evidence JSON.")
+        except Exception:
+          pass
+
     # 4. Check uncertainty preservation for unconfirmed AI findings
     if EvidenceSource.AI_RADIOGRAPHIC_OBSERVATION in statement.source_types:
       # If this statement discusses an AI finding that has NOT been confirmed
@@ -208,8 +307,29 @@ class FaithfulnessChecker:
 
       validated_stmts.append(stmt)
 
+    # Check for duplicated sentences across sections 5 and 7
+    seen_section_sentences: dict[str, str] = {}
+    for stmt in validated_stmts:
+      if stmt.section_index in (5, 7) and stmt.verification_status != VerificationStatus.UNSUPPORTED_CLAIM:
+        for s in re.split(r"(?<=[.!?])\s+", stmt.sentence_text):
+          s_clean = re.sub(r"[^\w\s]", "", s.lower()).strip()
+          if len(s_clean) > 15:
+            if s_clean in seen_section_sentences:
+              prev_stmt_id = seen_section_sentences[s_clean]
+              all_unsupported_claims.append(f"[{stmt.statement_id}] Duplicated sentence across sections (already in {prev_stmt_id}): '{s.strip()}'")
+              stmt.verification_status = VerificationStatus.UNSUPPORTED_CLAIM
+              unsupported += 1
+              verified = max(0, verified - 1)
+              break
+            seen_section_sentences[s_clean] = stmt.statement_id
+
+    # Completeness Check: Ensure all package observations are addressed or listed
+    completeness_issues = cls.evaluate_completeness(validated_stmts, package)
+    for c_issue in completeness_issues:
+      all_unsupported_claims.append(f"[COMPLETENESS] {c_issue}")
+
     coverage_pct = round((verified / max(1, total)) * 100.0, 1)
-    is_faithful = (unsupported == 0 and total > 0)
+    is_faithful = (unsupported == 0 and len(completeness_issues) == 0 and total > 0)
 
     return FaithfulnessEvaluationResult(
         is_faithful=is_faithful,
@@ -222,3 +342,86 @@ class FaithfulnessChecker:
         citation_coverage_pct=coverage_pct,
         validated_statements=validated_stmts,
     )
+
+  @classmethod
+  def evaluate_completeness(
+      cls,
+      statements: list[NarrativeStatementCitation],
+      package: ClinicalEvidencePackage,
+  ) -> list[str]:
+    """Ensures every finding passed to the narrative appears in the output,
+    OR is explicitly listed in a deterministic 'Additional findings not addressed in this narrative: ...' line.
+    Rejects LLM output that silently omits findings.
+    """
+    if not package.ai_observations:
+      return []
+
+    # Narrative text from sections 5 and 7
+    narrative_sections = [s.sentence_text for s in statements if s.section_index in (5, 7)]
+    if not narrative_sections:
+      narrative_sections = [s.sentence_text for s in statements]
+    full_narrative = "\n".join(narrative_sections)
+    full_narrative_lower = full_narrative.lower()
+
+    # Check for deterministic additional findings line
+    additional_line_match = re.search(
+        r"additional findings not addressed in this narrative:\s*([^\n\.]+)",
+        full_narrative,
+        re.IGNORECASE,
+    )
+    additional_text = additional_line_match.group(1).lower() if additional_line_match else ""
+    additional_teeth = cls.extract_teeth_mentioned(additional_text) if additional_text else set()
+
+    missing_issues = []
+
+    for obs in package.ai_observations:
+      t_fdi = obs.tooth_fdi
+      p_class = obs.pathology_candidate
+      p_name = p_class.value.replace("_", " ")
+
+      if t_fdi is None:
+        keywords = cls.PATHOLOGY_KEYWORDS.get(p_class, [p_name])
+        found_kw = any(kw in full_narrative_lower for kw in keywords)
+        found_in_add = any(kw in additional_text for kw in keywords)
+        if not (found_kw or found_in_add):
+          missing_issues.append(f"Finding ID '{obs.finding_id}' ({p_name}) was silently omitted from narrative.")
+        continue
+
+      # If tooth appears in additional findings line, it is acknowledged
+      if t_fdi in additional_teeth or f"#{t_fdi}" in additional_text or f"tooth {t_fdi}" in additional_text:
+        continue
+
+      # Tooth must appear in the narrative text
+      all_teeth = cls.extract_teeth_mentioned(full_narrative)
+      if t_fdi not in all_teeth and f"#{t_fdi}" not in full_narrative:
+        missing_issues.append(
+            f"Finding Tooth #{t_fdi} ({p_name}) was silently omitted from narrative. "
+            f"All findings must be addressed or listed under 'Additional findings not addressed in this narrative:'."
+        )
+        continue
+
+      # Check that the tooth is paired with appropriate pathology keywords in its context
+      keywords = list(cls.PATHOLOGY_KEYWORDS.get(p_class, [p_name]))
+      if p_class == PathologyClass.DEEP_CARIES:
+        keywords += ["caries", "carious", "decay", "pulp"]
+
+      sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", full_narrative) if s.strip()]
+      tooth_has_context = False
+      for s in sentences:
+        s_teeth = cls.extract_teeth_mentioned(s)
+        if t_fdi in s_teeth or f"#{t_fdi}" in s:
+          s_lower = s.lower()
+          if any(kw in s_lower for kw in keywords):
+            tooth_has_context = True
+            break
+
+      if not tooth_has_context and any(kw in full_narrative_lower for kw in keywords):
+        tooth_has_context = True
+
+      if not tooth_has_context:
+        missing_issues.append(
+            f"Finding Tooth #{t_fdi} ({p_name}) was mentioned without matching clinical pathology context. "
+            f"All findings must be addressed or listed under 'Additional findings not addressed in this narrative:'."
+        )
+
+    return missing_issues

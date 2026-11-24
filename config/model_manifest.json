@@ -37,22 +37,40 @@
       "required_installation_action": "Copy best_int8.onnx into models/checkpoints/ if lightweight edge deployment is needed."
     },
     {
-      "model_id": "abychkov-fdi-detection",
-      "model_name": "Dental FDI 32-Tooth Detector",
-      "architecture": "RT-DETR Transformer Object Detector",
-      "version": "1.0.0",
-      "sha256": "426ddf210f339669f069bf41e0a4f225c72c4667ffb7f71c310112cfd7481f8a",
-      "license": "Open Community / Educational Research",
+      "model_id": "dentex-fdi-yolov8s",
+      "model_name": "DENTEX 32-Class FDI Tooth Detector (Production Primary)",
+      "architecture": "YOLOv8s (32-Class Tooth Localization, imgsz 960)",
+      "version": "2.0.0",
+      "sha256": "6d3f87d15e8fb2e588c404b24936c90a88f52d45488cdcff423dc86152e04f6d",
+      "license": "CC BY-NC 4.0 (DENTEX Challenge Academic Terms)",
       "supported_classes": [
         "11", "12", "13", "14", "15", "16", "17", "18",
         "21", "22", "23", "24", "25", "26", "27", "28",
         "31", "32", "33", "34", "35", "36", "37", "38",
         "41", "42", "43", "44", "45", "46", "47", "48"
       ],
-      "local_file_location": "models/checkpoints/dental_fdi.onnx",
+      "local_file_location": "models/checkpoints/dentex_fdi_yolov8s_best.onnx",
       "distribution_permitted": false,
-      "redistribution_rationale": "Third-party research checkpoint. Permitted for local academic evaluation; redistribution restricted to authorized academic bundles.",
-      "required_installation_action": "Copy dental_fdi.onnx into models/checkpoints/."
+      "redistribution_rationale": "Trained on DENTEX quadrant_enumeration split with horizontal-flip FDI label swapping (70/15/15, seed 42). End-to-end exact FDI accuracy: 94.87%, recall: 99.56% at IoU 0.4.",
+      "required_installation_action": "Available at models/checkpoints/dentex_fdi_yolov8s_best.onnx."
+    },
+    {
+      "model_id": "dentex-fdi-yolov8n",
+      "model_name": "DENTEX 32-Class FDI Tooth Detector (Lightweight Alternative)",
+      "architecture": "YOLOv8n (32-Class Tooth Localization, imgsz 640)",
+      "version": "1.0.0",
+      "sha256": "4f39f92b4fd0efb7c7b6bad2478480a2320ec3a425a51877b46261e21f4d88d5",
+      "license": "CC BY-NC 4.0 (DENTEX Challenge Academic Terms)",
+      "supported_classes": [
+        "11", "12", "13", "14", "15", "16", "17", "18",
+        "21", "22", "23", "24", "25", "26", "27", "28",
+        "31", "32", "33", "34", "35", "36", "37", "38",
+        "41", "42", "43", "44", "45", "46", "47", "48"
+      ],
+      "local_file_location": "models/checkpoints/dentex_fdi_yolov8n_best.onnx",
+      "distribution_permitted": false,
+      "redistribution_rationale": "Trained on DENTEX quadrant_enumeration split (80/20, seed 42). End-to-end exact FDI accuracy: 60.23%, recall: 91.36% at IoU 0.4.",
+      "required_installation_action": "Available at models/checkpoints/dentex_fdi_yolov8n_best.onnx."
     },
     {
       "model_id": "dentex-yolov8n-seg",
@@ -89,6 +107,24 @@
       "distribution_permitted": false,
       "redistribution_rationale": "Quantized weights derived from DENTEX training. Academic non-commercial license applies.",
       "required_installation_action": "Copy dentex_yolov8n_seg_int8.onnx into models/checkpoints/."
+    },
+    {
+      "model_id": "dentex-yolov8n-seg-static-qdq-int8",
+      "model_name": "DENTEX 4-Class Abnormal-Tooth Segmenter (Static QDQ INT8)",
+      "architecture": "YOLOv8n-seg (Static QDQ INT8 with Excluded Seg Head)",
+      "version": "1.0.0",
+      "sha256": "b91e74c837d7773f87de7b258813b4f290b36d4d5938d3c670a91333f3f91675",
+      "license": "CC BY-NC 4.0 (DENTEX Challenge Academic Terms)",
+      "supported_classes": [
+        "impacted_tooth",
+        "caries",
+        "periapical_lesion",
+        "deep_caries"
+      ],
+      "local_file_location": "models/checkpoints/dentex_yolov8n_seg_static_qdq_int8.onnx",
+      "distribution_permitted": false,
+      "redistribution_rationale": "Static QDQ INT8 model calibrated on 200 DENTEX training images with 102 seg/proto nodes excluded. Mask mAP50=0.4253, CPU median latency=35.99ms.",
+      "required_installation_action": "Available at models/checkpoints/dentex_yolov8n_seg_static_qdq_int8.onnx."
     },
     {
       "model_id": "nsitnov-8024-seg",

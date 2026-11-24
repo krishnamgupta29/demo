@@ -278,7 +278,7 @@ class ModelRegistry:
         supported_classes=["impacted_tooth", "caries", "periapical_lesion", "deep_caries"],
         input_shape=(1, 3, 640, 640),
         expected_output_shapes=[(1, 40, 8400), (1, 32, 160, 160)],
-        weight_rel_path="models/checkpoints/dentex_yolov8n_seg.onnx",
+        weight_rel_path="models/checkpoints/dentex_yolov8n_seg_best.onnx",
         license_terms="CC BY-NC 4.0",
         source_repository="Local Fine-Tuned Checkpoint",
     )

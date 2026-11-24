@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+set PYTHONUNBUFFERED=1
 title DENTRACE - Clinical Decision Support Engine
 
 echo =======================================================================

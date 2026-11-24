@@ -356,23 +356,89 @@ def test_faithfulness_checker_detects_hallucinated_tooth(sample_evidence_package
   assert result.unsupported_statements == 1
 
 
-def test_faithfulness_checker_enforces_uncertainty_for_ai_findings(sample_evidence_package):
-  """Ensures statements presenting unconfirmed AI findings without uncertainty qualification are flagged."""
-  pkg = sample_evidence_package
-
-  definitive_stmt = NarrativeStatementCitation(
-      statement_id="STMT-TEST-UNCERT",
+def test_faithfulness_checker_flags_ungrounded_pathology(sample_evidence_package):
+  """Ensures statements claiming ungrounded pathology types fail faithfulness check."""
+  pkg = sample_evidence_package  # contains caries only
+  stmt = NarrativeStatementCitation(
+      statement_id="STMT-TEST-PATHOLOGY",
       section_index=5,
       section_title="Radiographic Observations",
-      sentence_text="The radiograph definitively confirms caries in tooth 46.",
+      sentence_text="Suspected periapical lesion observed on tooth 46.",
       cited_evidence_ids=["EVID-RAD-001"],
       source_types=[EvidenceSource.AI_RADIOGRAPHIC_OBSERVATION],
       verification_status=VerificationStatus.UNVERIFIED_AI_SUSPICION,
   )
-
-  result = FaithfulnessChecker.validate_narrative([definitive_stmt], pkg)
+  result = FaithfulnessChecker.validate_narrative([stmt], pkg)
   assert result.is_faithful is False
-  assert any("uncertainty" in c.lower() for c in result.unsupported_claims)
+  assert any("periapical_lesion" in c for c in result.unsupported_claims)
+
+
+def test_faithfulness_checker_flags_ungrounded_jaw(sample_evidence_package):
+  """Ensures statements claiming wrong/ungrounded jaw (maxilla vs mandible) fail faithfulness check."""
+  pkg = sample_evidence_package  # tooth 46 is mandibular
+  stmt = NarrativeStatementCitation(
+      statement_id="STMT-TEST-JAW",
+      section_index=5,
+      section_title="Radiographic Observations",
+      sentence_text="Suspected caries observed in the maxilla on tooth 46.",
+      cited_evidence_ids=["EVID-RAD-001"],
+      source_types=[EvidenceSource.AI_RADIOGRAPHIC_OBSERVATION],
+      verification_status=VerificationStatus.UNVERIFIED_AI_SUSPICION,
+  )
+  result = FaithfulnessChecker.validate_narrative([stmt], pkg)
+  assert result.is_faithful is False
+  assert any("maxilla" in c.lower() for c in result.unsupported_claims)
+
+
+def test_faithfulness_checker_flags_ungrounded_side(sample_evidence_package):
+  """Ensures statements claiming wrong dental side (left vs right) fail faithfulness check."""
+  pkg = sample_evidence_package  # tooth 46 is right side
+  stmt = NarrativeStatementCitation(
+      statement_id="STMT-TEST-SIDE",
+      section_index=5,
+      section_title="Radiographic Observations",
+      sentence_text="Suspected caries observed in the left quadrant on tooth 46.",
+      cited_evidence_ids=["EVID-RAD-001"],
+      source_types=[EvidenceSource.AI_RADIOGRAPHIC_OBSERVATION],
+      verification_status=VerificationStatus.UNVERIFIED_AI_SUSPICION,
+  )
+  result = FaithfulnessChecker.validate_narrative([stmt], pkg)
+  assert result.is_faithful is False
+  assert any("left" in c.lower() for c in result.unsupported_claims)
+
+
+def test_faithfulness_checker_flags_invented_coordinates(sample_evidence_package):
+  """Ensures statements citing invented coordinates not matching evidence bbox fail faithfulness check."""
+  pkg = sample_evidence_package
+  stmt = NarrativeStatementCitation(
+      statement_id="STMT-TEST-COORDS",
+      section_index=5,
+      section_title="Radiographic Observations",
+      sentence_text="Suspected caries observed at bbox [0.850, 0.900, 0.950, 0.980] on tooth 46.",
+      cited_evidence_ids=["EVID-RAD-001"],
+      source_types=[EvidenceSource.AI_RADIOGRAPHIC_OBSERVATION],
+      verification_status=VerificationStatus.UNVERIFIED_AI_SUSPICION,
+  )
+  result = FaithfulnessChecker.validate_narrative([stmt], pkg)
+  assert result.is_faithful is False
+  assert any("coordinates" in c.lower() for c in result.unsupported_claims)
+
+
+def test_faithfulness_checker_passes_faithful_statement(sample_evidence_package):
+  """Ensures accurate statement adhering strictly to grounded facts passes faithfulness check."""
+  pkg = sample_evidence_package
+  stmt = NarrativeStatementCitation(
+      statement_id="STMT-TEST-FAITHFUL",
+      section_index=5,
+      section_title="Radiographic Observations",
+      sentence_text="Suspected caries observed in the mandibular right region on tooth 46.",
+      cited_evidence_ids=["EVID-RAD-001"],
+      source_types=[EvidenceSource.AI_RADIOGRAPHIC_OBSERVATION],
+      verification_status=VerificationStatus.UNVERIFIED_AI_SUSPICION,
+  )
+  result = FaithfulnessChecker.validate_narrative([stmt], pkg)
+  assert result.is_faithful is True
+  assert result.unsupported_statements == 0
 
 
 # ==============================================================================

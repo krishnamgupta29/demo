@@ -145,11 +145,16 @@ class ClinicalEvidenceService:
         # Check FDI uncertainty (if fdi is None or marked uncertain in evidence_json)
         fdi_uncertain = False
         unc_reason = None
+        ev_data = {}
+        fdi_uncertain = False
+        unc_reason = None
+        fdi_status = "ai_estimated"
         if f["evidence_json"]:
           try:
             ev_data = json.loads(f["evidence_json"])
             fdi_uncertain = ev_data.get("fdi_uncertain", False)
             unc_reason = ev_data.get("uncertainty_reason")
+            fdi_status = ev_data.get("fdi_status", "ai_estimated")
           except Exception:
             pass
 
@@ -157,6 +162,10 @@ class ClinicalEvidenceService:
           fdi_uncertain = True
           if not unc_reason:
             unc_reason = "Unassigned tooth proposal / ambiguous spacing"
+
+        if f["review_status"] == "confirmed":
+          fdi_status = "clinician_confirmed"
+          fdi_uncertain = False
 
         obs = RadiographicObservation(
             evidence_id=f"EVID-RAD-{f['finding_id'][-8:]}",
@@ -173,9 +182,11 @@ class ClinicalEvidenceService:
             ),
             bbox=bbox_obj,
             polygon=poly_obj,
+            has_mask=(poly_obj is not None),
             tooth_fdi=f["tooth_fdi"],
             fdi_uncertain=fdi_uncertain,
             fdi_uncertainty_reason=unc_reason,
+            fdi_status=fdi_status,
             model_id=f["model_id"] or "liodon-panoramic-screener",
             model_version=f["model_version"] or "1.0.0",
             source_type=EvidenceSource.AI_RADIOGRAPHIC_OBSERVATION,

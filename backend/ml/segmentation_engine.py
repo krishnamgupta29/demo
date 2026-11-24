@@ -92,14 +92,17 @@ class DentalSegmentationEngine:
             return False
 
         try:
+            import os
+            os.environ["YOLO_AUTOINSTALL"] = "0"
             from ultralytics import YOLO
             import torch
 
             if str(self.checkpoint_path).endswith(".onnx"):
                 device = "cpu"
+                self._yolo_model = YOLO(str(self.checkpoint_path), task="segment")
             else:
                 device = "cuda:0" if torch.cuda.is_available() else "cpu"
-            self._yolo_model = YOLO(str(self.checkpoint_path))
+                self._yolo_model = YOLO(str(self.checkpoint_path))
             self._device = device
             return True
         except ImportError:

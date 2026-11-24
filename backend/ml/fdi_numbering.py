@@ -36,13 +36,13 @@ class FDINumberingEngine:
 
     def __init__(
         self,
-        checkpoint_rel_path: str = "models/checkpoints/dental_fdi.onnx",
-        conf_threshold: float = 0.35,
+        checkpoint_rel_path: str = "ml/models/checkpoints/dentex_fdi_yolov8s_best.onnx",
+        conf_threshold: float = 0.25,
         iou_threshold: float = 0.40,
     ):
-        self.model_id = "abychkov-fdi-detection"
-        self.model_name = "Dental FDI 32-Tooth Detector"
-        self.version = "1.0.0"
+        self.model_id = "dentex-fdi-yolov8s"
+        self.model_name = "DENTEX 32-Tooth FDI Detector (YOLOv8s-960)"
+        self.version = "2.0.0"
         self.checkpoint_rel_path = checkpoint_rel_path
         self.conf_threshold = conf_threshold
         self.iou_threshold = iou_threshold
@@ -121,48 +121,76 @@ class FDINumberingEngine:
 
         try:
             orig_w, orig_h = image.size
-            tensor, meta = ImagePreprocessor.letterbox(image, target_size=640)
+            inp = self._session.get_inputs()[0]
+            target_size = int(inp.shape[2]) if (len(inp.shape) > 2 and isinstance(inp.shape[2], int) and inp.shape[2] > 0) else 640
+            tensor, meta = ImagePreprocessor.letterbox(image, target_size=target_size)
 
             t0 = time.perf_counter()
-            input_name = self._session.get_inputs()[0].name
+            input_name = inp.name
             outputs = self._session.run(None, {input_name: tensor})
             t1 = time.perf_counter()
             latency_ms = round((t1 - t0) * 1000.0, 2)
 
-            # Output shape is (1, 300, 36)
-            proposals = outputs[0][0]  # shape (300, 36)
-            coords = proposals[:, :4]  # normalized cx, cy, w, h
+            out0 = outputs[0][0]
+            if out0.ndim == 2 and out0.shape[0] == 36 and out0.shape[1] > 36:
+                # YOLOv8 format: shape (36, 8400) -> transpose to (8400, 36)
+                proposals = np.transpose(out0, (1, 0))
+                is_yolo = True
+            else:
+                # DETR format: shape (300, 36)
+                proposals = out0
+                is_yolo = False
+
+            coords = proposals[:, :4]
             class_scores = proposals[:, 4:]  # 32 class scores
 
             max_scores = np.max(class_scores, axis=1)
             argmax_classes = np.argmax(class_scores, axis=1)
 
-            # Filter proposals above threshold
+            # Filter proposals above threshold and sort descending by score
             candidate_indices = np.where(max_scores >= conf_th)[0]
+            if len(candidate_indices) > 0:
+                candidate_indices = candidate_indices[np.argsort(-max_scores[candidate_indices])]
 
-            # Midline and occlusal plane estimations in normalized coordinates
-            # Midline is horizontally center (~0.5)
-            # Occlusal plane is vertically center (~0.5)
             teeth_list: list[ToothLocalization] = []
             seen_boxes = []
+            seen_fdi_numbers = set()
 
             for idx in candidate_indices:
                 score = float(max_scores[idx])
                 cls_idx = int(argmax_classes[idx])
+                fdi_num = ((cls_idx // 8) + 1) * 10 + ((cls_idx % 8) + 1)
+
+                # Deterministic post-processing: each FDI appears at most once per image (highest confidence kept)
+                if fdi_num in seen_fdi_numbers:
+                    continue
+
                 cx, cy, w, h = coords[idx]
 
-                # Convert normalized coordinates to 640x640 space
-                x1_lb = (cx - w / 2.0) * meta.target_size
-                y1_lb = (cy - h / 2.0) * meta.target_size
-                x2_lb = (cx + w / 2.0) * meta.target_size
-                y2_lb = (cy + h / 2.0) * meta.target_size
+                if is_yolo:
+                    # In YOLOv8, coords are in 640 space
+                    x1_lb = cx - w / 2.0
+                    y1_lb = cy - h / 2.0
+                    x2_lb = cx + w / 2.0
+                    y2_lb = cy + h / 2.0
+                else:
+                    # Convert normalized coordinates to 640x640 space
+                    x1_lb = (cx - w / 2.0) * meta.target_size
+                    y1_lb = (cy - h / 2.0) * meta.target_size
+                    x2_lb = (cx + w / 2.0) * meta.target_size
+                    y2_lb = (cy + h / 2.0) * meta.target_size
 
-                box_orig = ImagePreprocessor.unletterbox_box([x1_lb, y1_lb, x2_lb, y2_lb], meta)
+                raw_box = ImagePreprocessor.unletterbox_box([x1_lb, y1_lb, x2_lb, y2_lb], meta)
+                # Clamp within image bounds and ensure strictly positive box dimensions
+                bx1 = max(0.0, min(float(orig_w - 2.0), float(raw_box[0])))
+                by1 = max(0.0, min(float(orig_h - 2.0), float(raw_box[1])))
+                bx2 = max(bx1 + 1.0, min(float(orig_w), float(raw_box[2])))
+                by2 = max(by1 + 1.0, min(float(orig_h), float(raw_box[3])))
+                box_orig = [bx1, by1, bx2, by2]
 
                 # Deduplication check against already accepted tooth boxes
                 is_duplicate = False
                 for sb in seen_boxes:
-                    # Quick IoU check
                     xx1 = max(box_orig[0], sb[0])
                     yy1 = max(box_orig[1], sb[1])
                     xx2 = min(box_orig[2], sb[2])
@@ -178,9 +206,9 @@ class FDINumberingEngine:
                 if is_duplicate:
                     continue
                 seen_boxes.append(box_orig)
+                seen_fdi_numbers.add(fdi_num)
 
                 # Patient-side anatomical orientation:
-                # OPG convention: patient right is image left, patient left is image right
                 box_center_x = (box_orig[0] + box_orig[2]) / 2.0
                 box_center_y = (box_orig[1] + box_orig[3]) / 2.0
 
@@ -199,16 +227,15 @@ class FDINumberingEngine:
                 else:
                     quadrant = 4
 
-                # Bychkov checkpoint limitation check:
-                # Because the author's proprietary anatomical consistency engine is closed-source,
-                # raw logit mapping without topological graph resolution has ambiguous class boundaries.
-                # Therefore, we flag uncertain tooth numbers truthfully.
-                uncertain = score < 0.55
+                # FDI assignment from model predicted class
+                fdi_num = ((cls_idx // 8) + 1) * 10 + ((cls_idx % 8) + 1)
+                uncertain = score < 0.45
+                conf_clamped = min(1.0, max(0.0, score))
 
                 teeth_list.append(
                     ToothLocalization(
-                        fdi_number=None,  # Not forcing unvalidated FDI number onto ambiguous proposals
-                        confidence=round(score, 4),
+                        fdi_number=fdi_num,
+                        confidence=round(conf_clamped, 4),
                         bbox_orig=box_orig,
                         quadrant=quadrant,
                         patient_side=patient_side,

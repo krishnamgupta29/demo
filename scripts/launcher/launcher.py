@@ -241,7 +241,19 @@ class DentraceLauncher:
           hw_info["ollama_available"] = True
           has_qwen = any("qwen2.5:3b" in m for m in models)
           if has_qwen:
-            print("[*] Local LLM: Ollama Online (qwen2.5:3b model ready for clinical drafting)")
+            print("[*] Local LLM: Ollama Online (preloading qwen2.5:3b into memory with keep_alive=15m)...")
+            try:
+              warmup_req = urllib.request.Request(
+                  "http://127.0.0.1:11434/api/generate",
+                  data=json.dumps({"model": "qwen2.5:3b", "prompt": "ready", "keep_alive": "15m"}).encode(),
+                  headers={"Content-Type": "application/json"},
+                  method="POST",
+              )
+              with urllib.request.urlopen(warmup_req, timeout=5.0) as _:
+                pass
+              print("[*] Local LLM: qwen2.5:3b preloaded and active in memory.")
+            except Exception:
+              print("[*] Local LLM: qwen2.5:3b ready for clinical drafting.")
           else:
             print("[*] Local LLM: Ollama Online (qwen2.5:3b not pulled — rule-based narrative active)")
     except Exception:

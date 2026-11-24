@@ -265,4 +265,42 @@ This document logs critical architectural, technical, and clinical decisions mad
   6. **Release Packaging**: Stage an offline release package using `scripts/build_release.py` generating `dist/DENTRACE-v0.1.0-win64.zip` (446.59 MB), `SHA256SUMS.txt`, and an Inno Setup installer script (`scripts/installer/dentrace_setup.iss`).
 - **Rationale:** Ensures enterprise-standard deployment readiness, HIPAA/DICOM privacy compliance, robust process stability, and seamless non-admin operation on Windows 11.
 
+---
+
+## Decision Record 33: Empirical Calibration & Benchmark of Static QDQ INT8 vs. FP32
+- **Context:** Dynamic INT8 quantization previously introduced dynamic activation quantization overhead that degraded CPU inference latency to 79.66 ms (slower than FP32's 44.55 ms). Furthermore, quantizing the prototype mask head degraded mask prediction fidelity.
+- **Decision:**
+  1. Build a **Static QDQ INT8** model (`dentex_yolov8n_seg_static_qdq_int8.onnx`, 7.23 MB) using `quantize_static` with MinMax calibration over 200 real images strictly from the training split (`ml/datasets/dentex/yolo_seg/images/train/`).
+  2. Exclude all 102 segmentation head and prototype mask nodes (`/model.22/proto/*`, `/model.22/cv4.*`, `/model.22/*`) from quantization (`nodes_to_exclude`), ensuring the prototype masks remain in full precision.
+  3. Validate on the full 141-image held-out validation split:
+     - **FP32:** Box mAP50 = **0.4679**, Mask mAP50 = **0.4420**, CPU Median Latency = **44.36 ms**, p95 = **46.85 ms** (13.80 MB).
+     - **Static QDQ INT8:** Box mAP50 = **0.4565**, Mask mAP50 = **0.4253**, CPU Median Latency = **35.99 ms**, p95 = **39.18 ms** (7.23 MB).
+     - **Mask mAP50 Delta:** Absolute drop of **0.0167** (strictly within the $\le 0.03$ threshold).
+     - **Latency Improvement:** 18.9% latency reduction, operating at **35.99 ms** median CPU latency ($< 50$ ms threshold).
+- **Rationale:** Both acceptance gates (mask mAP50 drop $\le 0.03$ and median CPU latency $< 50$ ms) are met with empirical measurement. The Static QDQ model is baselined in the model manifest and available for production deployment.
+
+---
+
+## Decision Record 34: End-to-End FDI Tooth Localization and Numbering Evaluation Caveats
+- **Context:** Previously, the 76.07% FDI accuracy benchmark was measured using ground-truth bounding boxes from the training split (`train_quadrant_enumeration.json`) fed directly into the topological solver. This tested the ordering algorithm in isolation on pristine annotations, not the real end-to-end vision pipeline.
+- **Decision:**
+  1. Formally re-evaluate the full end-to-end pipeline: `dental_fdi.onnx` (`abychkov/dental-fdi-detection`) $\to$ predicted bounding boxes $\to$ `CalibratedFDISolver` on 124 held-out DENTEX validation split images (3,563 ground truth teeth).
+  2. Document the empirical measured metrics:
+     - **Teeth Detection & Matching Recall (IoU $\ge$ 0.4):** **38.53%** (1,373 / 3,563 GT teeth).
+     - **Exact-FDI Accuracy (on detected/matched proposals):** **36.20%** (497 / 1,373 teeth).
+     - **Exact-FDI Accuracy (end-to-end across all GT teeth):** **13.95%** (497 / 3,563 teeth).
+     - **Quadrant Assignment Accuracy (on matched proposals):** **87.84%** (1,206 / 1,373 teeth):
+       - Q1 (Maxillary Right): 89.20%
+       - Q2 (Maxillary Left): 92.33%
+       - Q3 (Mandibular Left): 84.96%
+       - Q4 (Mandibular Right): 85.39%
+     - **Tooth Position Accuracy (1–8):** **40.35%** (554 / 1,373 teeth):
+       - Position 1 (Central Incisor): 59.78% (highest)
+       - Position 8 (3rd Molar/Wisdom): 28.79% (lowest, impacted/crowded/missing)
+  3. Relabel all historical references to 76.07% as: *"Ordering algorithm on ground-truth boxes on training split"*.
+  4. Explicitly note potential data leakage risk: `dental_fdi.onnx` is an open third-party model whose exact training set is unconfirmed by its upstream author; testing on DENTEX validation split provides our best reproducible baseline.
+- **Rationale:** Strict clinical engineering honesty mandates distinguishing standalone topological sorting from genuine vision-in-the-loop detection performance.
+
+
+
 

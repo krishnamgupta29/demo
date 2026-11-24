@@ -21,6 +21,49 @@ from ..schemas.finding import PathologyClass
 from .faithfulness import FaithfulnessChecker
 
 
+PATHOLOGY_READABLE_MAP = {
+    PathologyClass.CARIES: "caries",
+    PathologyClass.DEEP_CARIES: "deep caries",
+    PathologyClass.PERIAPICAL_LESION: "periapical lesion",
+    PathologyClass.IMPACTED_TOOTH: "impacted tooth",
+    PathologyClass.ALVEOLAR_BONE_LOSS: "alveolar bone loss",
+    PathologyClass.ROOT_CANAL_TREATMENT: "root canal treatment",
+    PathologyClass.TREATED_TOOTH_WITH_RADIOLUCENCY: "treated tooth with periapical radiolucency",
+}
+
+PATHOLOGY_RATIONALE_TEMPLATES = {
+    PathologyClass.CARIES: (
+        "Clinical evaluation and restorative treatment planning is recommended to arrest carious "
+        "demineralization and restore coronal integrity, pending clinician confirmation of this AI-assisted finding."
+    ),
+    PathologyClass.DEEP_CARIES: (
+        "Pulp-proximity evaluation and endodontic or restorative review is recommended to assess pulpal "
+        "vitality and determine whether indirect pulp therapy or endodontic intervention is warranted, "
+        "pending clinician confirmation of this AI-assisted finding."
+    ),
+    PathologyClass.PERIAPICAL_LESION: (
+        "Endodontic evaluation is recommended to assess pulpal necrosis and apical periodontitis, "
+        "pending clinician confirmation of this AI-assisted finding."
+    ),
+    PathologyClass.IMPACTED_TOOTH: (
+        "Surgical extraction evaluation or ongoing radiographic monitoring is recommended to assess impaction "
+        "angulation and prevent damage to adjacent structures, pending clinician confirmation of this AI-assisted finding."
+    ),
+    PathologyClass.ROOT_CANAL_TREATMENT: (
+        "Endodontic radiographic monitoring is recommended to confirm apical seal integrity and absence of pathology, "
+        "pending clinician confirmation of this AI-assisted finding."
+    ),
+    PathologyClass.TREATED_TOOTH_WITH_RADIOLUCENCY: (
+        "Endodontic re-evaluation or surgical consultation is recommended to assess potential post-treatment "
+        "periapical failure, pending clinician confirmation of this AI-assisted finding."
+    ),
+    PathologyClass.ALVEOLAR_BONE_LOSS: (
+        "Periodontal evaluation and clinical probing depth correlation are recommended to assess periodontal "
+        "attachment loss, pending clinician confirmation of this AI-assisted finding."
+    ),
+}
+
+
 class DeterministicNarrativeGenerator:
   """Generates strictly grounded 10-section pre-authorization clinical documentation."""
 
@@ -126,7 +169,7 @@ class DeterministicNarrativeGenerator:
       cfm_eids = []
       for cfm in package.dentist_confirmations:
         t_str = f"Tooth #{cfm.confirmed_fdi}" if cfm.confirmed_fdi else "Unspecified tooth"
-        p_str = cfm.confirmed_pathology.value if cfm.confirmed_pathology else "finding"
+        p_str = PATHOLOGY_READABLE_MAP.get(cfm.confirmed_pathology, cfm.confirmed_pathology.value.replace("_", " ")) if cfm.confirmed_pathology else "finding"
         cfm_descs.append(
             f"Reviewer {cfm.reviewer_name} (Lic# {cfm.license_number}) {cfm.decision.value.upper()} {p_str} on {t_str}"
             + (f" with notes: '{cfm.clinical_notes}'" if cfm.clinical_notes else "")
@@ -149,19 +192,45 @@ class DeterministicNarrativeGenerator:
     )
     statements.append(stmt_4)
 
-    # SECTION 5: Radiographic Observations with Uncertainty Preserved
+    # SECTION 5: Radiographic Observations with Uncertainty Preserved (Grouped by Pathology)
+    from .attribute_engine import ClinicalAttributeEngine
+    from collections import OrderedDict
+
     if package.ai_observations:
-      obs_descs = []
-      obs_eids = []
+      obs_eids = [obs.evidence_id for obs in package.ai_observations]
+      grouped_findings: dict[PathologyClass, list[RadiographicObservation]] = OrderedDict()
       for obs in package.ai_observations:
-        t_str = f"near Tooth #{obs.tooth_fdi}" if obs.tooth_fdi is not None else "in dental arch"
-        unc_str = " (flagged uncertain numbering)" if obs.fdi_uncertain else ""
-        obs_descs.append(
-            f"Model {obs.model_id} ({obs.model_version}) suspected {obs.pathology_candidate.value} {t_str}{unc_str} "
-            f"[raw confidence: {round(obs.confidence * 100, 1)}%, modality: {obs.annotation_modality.value}]"
-        )
-        obs_eids.append(obs.evidence_id)
-      s5_text = "Radiographic Observations: Screening analysis detected: " + "; ".join(obs_descs) + ". These represent provisional observations, not definitive diagnoses."
+        grouped_findings.setdefault(obs.pathology_candidate, []).append(obs)
+
+      grouped_clauses = []
+      for p_cls, obs_list in grouped_findings.items():
+        p_name = PATHOLOGY_READABLE_MAP.get(p_cls, p_cls.value.replace("_", " "))
+        teeth_nums = [f"#{o.tooth_fdi}" for o in obs_list if o.tooth_fdi is not None]
+        unloc_count = len([o for o in obs_list if o.tooth_fdi is None])
+
+        teeth_part = ""
+        if teeth_nums:
+          if len(teeth_nums) == 1:
+            teeth_part = f"on tooth {teeth_nums[0]}"
+          elif len(teeth_nums) == 2:
+            teeth_part = f"on teeth {teeth_nums[0]} and {teeth_nums[1]}"
+          else:
+            teeth_part = f"on teeth {', '.join(teeth_nums[:-1])}, and {teeth_nums[-1]}"
+
+        if unloc_count > 0:
+          unloc_str = f"{unloc_count} unlocalized region(s)"
+          teeth_part = f"{teeth_part} and {unloc_str}" if teeth_part else f"in {unloc_str}"
+
+        endo_alerts = []
+        for o in obs_list:
+          has_endo_fail, endo_msg = ClinicalAttributeEngine.evaluate_endodontic_failure(package.ai_observations, o.tooth_fdi)
+          if has_endo_fail and p_cls == PathologyClass.PERIAPICAL_LESION:
+            endo_alerts.append(f"#{o.tooth_fdi} [{endo_msg}]")
+        alert_str = f" (endodontic alert: {'; '.join(endo_alerts)})" if endo_alerts else ""
+
+        grouped_clauses.append(f"suspected {p_name} {teeth_part}{alert_str}")
+
+      s5_text = "Radiographic Observations: Screening analysis detected: " + "; ".join(grouped_clauses) + ". These represent provisional observations, not definitive diagnoses."
     else:
       obs_eids = []
       s5_text = "Radiographic Observations: No automated vision findings identified or staged for this radiograph."
@@ -204,13 +273,36 @@ class DeterministicNarrativeGenerator:
     )
     statements.append(stmt_6)
 
-    # SECTION 7: Clinical Rationale Supplied by the Dentist
+    # SECTION 7: Clinical Rationale Supplied by the Dentist (Hedged by Pathology)
     if package.requested_procedures:
       rationales = [
           f"Procedure '{p.procedure_name}': {p.clinician_rationale}"
           for p in package.requested_procedures if p.clinician_rationale
       ]
       s7_text = "Clinician Clinical Rationale: " + (" ".join(rationales) if rationales else "No objective justification entered [REQUIRES RATIONALE].")
+    elif package.ai_observations:
+      from collections import OrderedDict
+      grouped_findings: dict[PathologyClass, list[RadiographicObservation]] = OrderedDict()
+      for obs in package.ai_observations:
+        grouped_findings.setdefault(obs.pathology_candidate, []).append(obs)
+
+      path_rationales = []
+      for p_cls, obs_list in grouped_findings.items():
+        teeth_nums = [f"#{o.tooth_fdi}" for o in obs_list if o.tooth_fdi is not None]
+        teeth_label = f"teeth {', '.join(teeth_nums)}" if len(teeth_nums) > 1 else (f"tooth {teeth_nums[0]}" if teeth_nums else "unlocalized area")
+        template = PATHOLOGY_RATIONALE_TEMPLATES.get(
+            p_cls,
+            "Clinical evaluation and treatment planning is recommended, pending clinician confirmation of this AI-assisted finding."
+        )
+        for o in obs_list:
+          has_rct_fail, _ = ClinicalAttributeEngine.evaluate_endodontic_failure(package.ai_observations, o.tooth_fdi)
+          if has_rct_fail and p_cls == PathologyClass.PERIAPICAL_LESION:
+            template = PATHOLOGY_RATIONALE_TEMPLATES[PathologyClass.TREATED_TOOTH_WITH_RADIOLUCENCY]
+            break
+
+        path_rationales.append(f"For {teeth_label}: {template}")
+
+      s7_text = "Clinician Clinical Rationale: " + " ".join(path_rationales)
     else:
       s7_text = "Clinician Clinical Rationale: Treatment rationale pending clinician procedure submission."
 

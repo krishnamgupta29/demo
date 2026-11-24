@@ -1,7 +1,7 @@
 """Postprocessing routines for object detection: tensor decoding, class-aware NMS, and coordinate mapping."""
 
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Sequence, Optional
 import numpy as np
 from .preprocessor import ImagePreprocessor, LetterboxMetadata
 
@@ -15,6 +15,9 @@ class DetectionResult:
     confidence: float
     bbox_orig: list[float]  # [x_min, y_min, x_max, y_max] in original image pixels
     geometry_type: str = "bbox"  # Strictly "bbox" for object detector outputs (no false polygon masks)
+    has_mask: bool = False
+    mask_polygon: Optional[list[list[float]]] = None
+
 
 
 def nms_boxes(boxes_xyxy: np.ndarray, scores: np.ndarray, iou_threshold: float = 0.35) -> list[int]:

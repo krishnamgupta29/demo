@@ -49,6 +49,8 @@ data/*
 *.zip
 *.tar.gz
 *.7z
+!samples/*.png
+!samples/*.jpg
 
 # Model Weights & Binary Checkpoints (Strictly local)
 models/*
@@ -69,27 +71,29 @@ ml/checkpoints/*
 *.engine
 *.safetensors
 
-# Datasets
-datasets/*
-!datasets/.gitkeep
-!datasets/README.md
+# Generated Reports & PDFs
+reports/generated/*
+!reports/generated/.gitkeep
+*.pdf
+
+# Datasets & Training Data
+datasets/
+training_data/
+training_data.zip
+validation_data.zip
 ml/datasets/*
 !ml/datasets/.gitkeep
 !ml/datasets/README.md
 
-# Archive & Scratch
-archive/
+# Scratch & Archive
 scratch/
+archive/
 
-# Experiments & Logs
-experiments/*
-logs/
-*.log
-backend.log
-
-# Generated Reports & PDFs
-reports/generated/*
-!reports/generated/.gitkeep
+# Runs & Caches
+runs/
+ml/runs/*
+caches/
+*.cache
 
 # IDE & OS Files
 .idea/

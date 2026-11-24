@@ -135,6 +135,18 @@ class PathologyFinding(ClinicalBaseModel):
       default=None,
       description="Pixel segmentation polygon (required for instance segmentation)",
   )
+  has_mask: bool = Field(
+      default=False,
+      description="Whether this finding has a genuine instance segmentation polygon mask",
+  )
+  fdi_uncertain: bool = Field(
+      default=False,
+      description="True if FDI tooth number is AI-estimated with low confidence or ambiguous overlap",
+  )
+  fdi_status: str = Field(
+      default="ai_estimated",
+      description="FDI verification status: 'clinician_confirmed' or 'ai_estimated'",
+  )
   evidence: ClinicalEvidence = Field(
       default_factory=ClinicalEvidence,
       description="Objective radiographic facts",
